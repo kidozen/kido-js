@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Kidozen Samples</title>        
+        <meta name="viewport" content="width=device-width, initial-scale=1"> 
+
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+        <script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+        <style>
+            #object {
+                height: 100px;
+            }
+        </style>
+    </head>
+    <body>
+
+    <div id="storage" data-role="page">
+        
+        <div data-role="header">
+            <h1>Kidozen - Notifications Sample</h1>
+            <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
+        </div>
+
+        <div data-role="content">
+            
+            <form id="sendNotification">
+                <div data-role="fieldcontain">
+                    <label for="channel">channel:</label>
+                    <input type="text" id="channel" name="channel"></input>
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="type">type:</label>
+                    <select id="type" name="type">
+                        <option>toast</option>
+                        <option>tile</option>
+                        <option>raw</option>
+                    </select>
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="title">title:</label>
+                    <input type="text" id="title" name="title"></input>
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="text">text:</label>
+                    <input type="text" id="text" name="text"></input>
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="badge">badge:</label>
+                    <input type="number" id="badge" value=0 name="badge"></input>
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="image">image:</label>
+                    <input type="text" id="image" name="image"></input>
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="param">param:</label>
+                    <input type="text" id="param" name="param"></input>
+                </div>
+                
+                <input class="btn" type="submit" value="send"/>
+                <input id="clearLogButton" type="button" value="clear log"/>
+            </form>
+
+            <h3>log</h3>
+            <ul id="log">
+            </ul>
+        </div>
+    </div>
+
+    <!-- KIDOZEN SDK -->
+    <script src="/js/kido-0.0.1.js"></script>
+    
+    <script type="text/javascript">
+        $(document).ready(function(){
+            var notifications = new Kido().notifications();
+            
+            $("#clearLogButton").click(function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                $("#log").empty();
+            }); 
+
+            $("#sendNotification").submit(function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                var notif = { 
+                    channel : $("#channel").val(),
+                    title   : $("#title").val(),
+                    type    : $("#type").val(),
+                    text    : $("#text").val(),
+                    badge   : $("#badge").val(),
+                    image   : $("#image").val(),
+                    param   : $("#param").val()
+                };
+
+                try {
+                    var send = notifications.send(notif.channel, notif.title, notif.text, notif.type, notif.badge, notif.image, notif.param);
+                    send.done(function() {
+                        $("#channel").val("").focus();
+                    });
+                    send.fail(function(e) {
+                        var li = $("<li>" + currentTime() + " - error: " + JSON.stringify(e) + "</li>");
+                        $("#log").prepend(li);
+                    });
+                }
+                catch(err) {
+                    var li = $("<li>" + currentTime() + " - error: " + JSON.stringify(e) + "</li>");
+                    $("#log").prepend(li);
+                }
+
+                return false;
+            });
+        });
+
+        function currentTime() {
+            return new Date().getHours().toString() + ":" + new Date().getMinutes().toString() + ":" + new Date().getSeconds().toString();
+        };
+
+    </script>
+    </body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Kidozen Samples</title>        
+        <meta name="viewport" content="width=device-width, initial-scale=1"> 
+
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+        <script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+        <style>
+            #object {
+                height: 100px;
+            }
+        </style>
+    </head>
+    <body>
+
+    <div id="storage" data-role="page">
+        
+        <div data-role="header">
+            <h1>Kidozen - Storage Samples</h1>
+            <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
+        </div>
+
+        <div data-role="content">
+            
+            <div data-role="fieldcontain">
+              <label for="objSetName">Object set name:</label>
+              <input type="text" name="objSetName" id="objSetName" value="" placeholder="Object set name"/>
+            </div>
+
+            <div data-role="collapsible" data-theme="b" data-content-theme="c">
+              <h3>Manipulate an object</h3>
+                
+              <div data-role="fieldcontain">
+                  <label for="sampleObj">Object:</label>
+                  <textarea id="sampleObj" rows="6" cols="80">
+                  {
+                      "firstName": "Tom",
+                      "lastName": "Jenkins",
+                      "open": true    
+                  }
+                  </textarea>
+              </div>
+
+               <div data-role="controlgroup" data-type="horizontal">
+                  <a data-role="button" class="insert-new-object">Insert</a>
+                  <a data-role="button" class="update-object">Update</a>
+                  <a data-role="button" class="delete-object">Delete</a>
+               </div>
+               
+            </div>
+
+            <div data-role="collapsible" data-theme="b" data-content-theme="c">
+              <h3>Get an object</h3>
+              <div class="fieldcontain">
+                <label for="_id">_id</label>
+                <input name="_id" id="_id"></input>
+              </div>
+              <button class="get-object">Get</button>
+              <pre class="get-object-result">
+              </pre>
+            </div>
+
+            <div data-role="collapsible" data-theme="b" data-content-theme="c">
+               <h3>Get Object set</h3>
+               <button class="get-objectSet">Get</button>
+               <pre class="get-objectset-result">
+               </pre>
+            </div>
+
+            <section id="logs" class="ui-body ui-body-b">
+                <button type="button" id="clearConfirmation" class="btn">Clear Logs</button>
+                <button type="button" id="clearErrors" class="btn">Clear Errors</button>
+                <div class="ui-grid-a">
+                    <span class="ui-block-a">Logs</span>
+                    <span class="ui-block-b">Errors</span>
+                    <div id="confirmationLog" class="log-view ui-block-a"></div>
+                    <div id="errorLog" class="log-view ui-block-b"></div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- KIDOZEN SDK -->
+    <script src="/js/kido-0.0.1.js"></script>
+    
+    <script type="text/javascript">
+
+    var storage = new Kido().storage();
+
+    getObjectSet = function () {
+        //ie: return new Kido().storage().objectSet('sample');
+        return storage.objectSet($("#objSetName").val() || 'sample');
+    };
+        
+    $("#clearConfirmation").click(function(e){
+
+        $("#confirmationLog").empty();
+        
+    });
+
+    $("#clearErrors").click(function(e){
+
+        $("#errorLog").empty();
+        
+    });
+
+    $(".insert-new-object").click(function(e){
+
+        var sampleObject = $.parseJSON($("#sampleObj").val());
+        sampleObject._id = undefined;
+
+        //single line of code to insert new record
+        getObjectSet()
+            .insert(sampleObject)
+            .done(function(e){
+                sampleObject = e;
+                writeActionLog("store new object", "new object stored with an id = " + e._id);
+            })
+            .fail(function(e){
+                writeError(e);
+            });
+    });
+
+    $(".get-object").click(function(e){
+
+        var id = $('#_id').val();
+
+        if(!id || id === ""){
+            alert('Please complete the id field.');
+
+        }else{
+            getObjectSet()
+                .get(id)
+                .done(function(e){
+                    writeActionLog("get object " + id, JSON.stringify(e));
+                    $('.get-object-result').html(JSON.stringify(e));
+                })
+                .fail(function(e){
+                    writeError(e);
+                });
+        }
+    });
+
+    $(".get-objectSet").click(function(e){
+
+        getObjectSet()
+            .query()
+            .done(function(e){
+                writeActionLog("get entire objectSet", JSON.stringify(e, 0, 2));
+                $('.get-objectset-result').html(JSON.stringify(e));
+            })
+            .fail(function(e){
+                writeError(e);
+            });
+    });
+
+    $(".update-object").click(function(e){
+
+        var sampleObject = $.parseJSON($("#sampleObj").val());
+        sampleObject.open = false;    
+
+        getObjectSet()
+            .update(sampleObject)
+            .done(function(e){
+                writeActionLog("update object", e);
+            })
+            .fail(function(e){
+                writeError(e);
+            });
+    });
+
+    $(".delete-object").click(function(e){
+
+        var id = $('#_id').val();
+
+        if(!id || id === ""){
+
+            alert('Please complete the id field.');
+
+        }else{
+
+            getObjectSet()
+                .del(id)
+                .done(function(e){
+                    writeActionLog("delete object " + id, e);
+                })
+                .fail(function(e){
+                    writeError(e);
+                });
+        }
+    });
+
+    function writeError(errorObj){
+
+        if($.isPlainObject(errorObj)){
+            errorObj = JSON.stringify(errorObj);
+        }
+
+        var $errorLog = $("#errorLog"),
+            errorLog = "error :" + "<br/>" + errorObj + "<br/>" + $errorLog.html();
+
+        $errorLog.html(errorLog);
+
+    }
+
+    function writeActionLog(action, message){
+
+        if($.isPlainObject(message)){
+            message = message.toString();
+        }
+
+        var $confirm = $("#confirmationLog"),
+            confirm = "action " + action + "<br/>" + message + "<br/>" + $confirm.html();
+
+        $confirm.html(confirm);
+
+    }
+    </script>
+
+    </body>
+</html> 

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Kidozen Samples</title>        
+        <meta name="viewport" content="width=device-width, initial-scale=1"> 
+
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+        <script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+    </head>
+    <body>
+        
+        <div data-role="page">
+            
+            <div data-role="header">
+                <h1>Kidozen - Storage Samples</h1>
+                <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
+            </div>
+
+            <div data-role="content">
+                
+                <div data-role="fieldcontain">
+                  <label for="toPhone">To Phone#:</label>
+                  <input type="text" name="toPhone" id="toPhone" value="19192018509" placeholder="phone number"/>
+                </div>
+
+                <div data-role="fieldcontain">
+                  <label for="appName">Text Message:</label>
+                  <input type="text" name="testMsg" id="testMsg" value="" placeholder="text message"/>
+                </div>
+
+                <div data-role="collapsible" data-collapsed="false" data-theme="b" data-content-theme="c">
+                    <h3>Send or Query</h3>
+                    
+                    <div data-role="controlgroup" data-type="horizontal">
+                        <a data-role="button" class="send-msg">Send</a>
+                        <a data-role="button" class="query-status">Query Status</a>
+                    </div>
+                   
+                </div>
+
+                
+                <section id="logs" class="ui-body ui-body-b">
+                    <button type="button" id="clearConfirmation" class="btn">Clear Logs</button>
+                    <button type="button" id="clearErrors" class="btn">Clear Errors</button>
+                    <div class="ui-grid-a">
+                        <span class="ui-block-a">Logs</span>
+                        <span class="ui-block-b">Errors</span>
+                        <div id="confirmationLog" class="log-view ui-block-a"></div>
+                        <div id="errorLog" class="log-view ui-block-b"></div>
+                    </div>
+                </section>
+
+            </div>
+
+        </div>
+
+        <!-- KIDOZEN SDK -->
+        <script src="/js/kido-0.0.1.js"></script>
+        
+        <script type="text/javascript">
+
+            var sms = new Kido().sms(),
+                id  = null;
+
+            $(".send-msg").click(function(e){
+                
+                var toPhone = $("#toPhone").val(),
+                    message = $("#testMsg").val();
+
+                sms
+                    .send(toPhone, message)
+                    .done(function(ret){
+                        id = ret.messageId
+                        writeActionLog("send new SMS Message", ret);
+                    })
+                    .fail(function(e, x, Y){
+                        writeError(e);
+                    });
+            });
+
+            $(".query-status").click(function(e){
+
+                if(!id || id === "") {
+
+                    alert("Send and sms first.");
+
+                }else{ 
+
+                    sms
+                        .getStatus(id)
+                        .done(function(ret){
+                            writeActionLog("SMS Message Status", ret.status);
+                        })
+                        .fail(function(e, x, Y){
+                            writeError(e);
+                        });
+                }
+            });
+
+            function writeError(errorObj){
+
+                if($.isPlainObject(errorObj)){
+                    errorObj = errorObj.toString();
+                }
+
+                var $errorLog = $("#errorLog"),
+                    errorLog = "error :" + "<br/>" + errorObj + "<br/>" + $errorLog.html();
+
+                $errorLog.html(errorLog);
+
+
+            }
+
+            function writeActionLog(action, message){
+
+                if($.isPlainObject(message)){
+                    message = JSON.stringify(message);
+                }
+
+                var $confirm = $("#confirmationLog"),
+                    confirm = "action " + action + "<br/>" + message + "<br/>" + $confirm.html();
+
+                $confirm.html(confirm);
+
+            }
+        </script>
+    </body>
+</html>

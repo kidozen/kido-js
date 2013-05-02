@@ -1,0 +1,36 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Mocha Tests</title>
+  <link rel="stylesheet" href="mocha.css" />
+</head>
+<body>
+  <div id="mocha"></div>
+  <!-- kido dependencies -->
+  <script src="jquery-1.7.2.js"></script>
+  <script src="socket.io.min.js"></script>
+  <script src="kido-js-0.0.1.js"></script>
+  <!-- unit testing scripts -->
+  <script src="expect.js"></script>
+  <script src="mocha.js"></script>
+  <script src="mocha.html-xunit.js"></script>
+  <script>
+    if (window.location.hash === '#xunit') {
+      mocha.reporter(HTMLXunit);
+    }
+    mocha.setup('bdd')
+  </script>
+
+  <!-- test suites -->
+  <script src="specs/kido.storage.specs.js"></script>
+  <script src="specs/kido.config.specs.js"></script>
+  <script src="specs/kido.email.specs.js"></script>
+  <script src="specs/kido.logging.specs.js"></script>
+  <script src="specs/kido.pubsub.specs.js"></script>
+  <script src="specs/kido.queue.specs.js"></script>
+
+  <script>
+    mocha.run(function () { $("#mocha").addClass("finished"); });
+  </script>
+</body>
+</html>

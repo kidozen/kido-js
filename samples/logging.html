@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Kidozen Samples</title>        
+        <meta name="viewport" content="width=device-width, initial-scale=1"> 
+        
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+        <script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+    </head>
+    <body>
+        <div id="storage" data-role="page">
+            <div data-role="header">
+                <h1>Kidozen - Logging Samples</h1>
+                <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
+            </div>
+
+            <div data-role="content">
+
+                <div data-role="collapsible" data-theme="b" data-content-theme="c">
+                    <h3>Write</h3>
+
+                    <pre>
+    {"foo": "bar"}
+                    </pre>
+                    <div data-role="controlgroup" data-type="horizontal">
+                        <a data-role="button" class="writeVerbose-log">Verbose</a>
+                        <a data-role="button" class="writeInfo-log">Info</a>
+                        <a data-role="button" class="writeWarning-log">Warning</a>
+                        <a data-role="button" class="writeError-log">Error</a>
+                        <a data-role="button" class="writeCritical-log">Critical</a>
+                    </div>
+
+                </div>
+
+                <div data-role="collapsible" data-theme="b" data-content-theme="c">
+                    <h3>Get</h3>
+                    <button class="get-log">Get</button>
+                    <pre id="get-log-result">
+
+                    </pre>
+                </div>
+
+                <div data-role="collapsible" data-theme="b" data-content-theme="c">
+                    <h3>Clear</h3>
+                    <button class="clear-log">Clear</button>
+                </div>
+
+                <section id="logs" class="ui-body ui-body-b">
+                    <button type="button" id="clearConfirmation" class="btn">Clear Logs</button>
+                    <button type="button" id="clearErrors" class="btn">Clear Errors</button>
+                    <div class="ui-grid-a">
+                        <span class="ui-block-a">Logs</span>
+                        <span class="ui-block-b">Errors</span>
+                        <div id="confirmationLog" class="log-view ui-block-a"></div>
+                        <div id="errorLog" class="log-view ui-block-b"></div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+    <!-- KIDOZEN SDK -->
+    <script src="/js/kido-0.0.1.js"></script>
+
+    <script type="text/javascript">
+        
+        var logging = new Kido().logging();
+
+        $(".writeInfo-log").click(function(e){
+
+            logging
+                .writeInfo({"foo": "bar"})
+                .done(function(ret){
+                    writeActionLog("writeInfo log", ret);
+                })
+                .fail(function(e){
+                    writeError(e);
+                });
+        
+        });
+
+
+        $(".writeVerbose-log").click(function(e){
+
+            logging
+                .writeVerbose({"foo": "bar"})
+                .done(function(ret){
+                    writeActionLog("writeVerbose log", ret);
+                })
+                .fail(function(e){
+                    writeError(e);
+                });
+        });
+
+        $(".writeWarning-log").click(function(e){
+
+            logging
+                .writeWarning({"foo": "bar"})
+                .done(function(ret){
+                    writeActionLog("writeWarning log", ret);
+                })
+                .fail(function(e){
+                    writeError(e);
+                });
+
+        });
+
+
+        $(".writeError-log").click(function(e){
+
+            logging
+                .writeError({"foo": "bar"})
+                .done(function(ret){
+                    writeActionLog("writeError log", ret);
+                })
+                .fail(function(e){
+                    writeError(e);
+                });
+        });
+
+        $(".writeCritical-log").click(function(e){
+
+            logging
+                .writeCritical({"foo": "bar"})
+                .done(function(ret){
+                    writeActionLog("writeCritical log", ret);
+                })
+                .fail(function(e){
+                    writeError(e);
+                });
+        });
+
+        $(".write-log").click(function(e){
+
+            logging
+                .write({"foo": "bar real"}, 1)
+                .done(function(ret){
+                    writeActionLog("write log", ret);
+                })
+                .fail(function(e){
+                    writeError(e);
+                });
+        });
+
+        $(".get-log").click(function(e){
+
+            logging
+                .get()
+                .done(function(ret){
+                    writeActionLog("clear log", JSON.stringify(ret));
+                    $('#get-log-result').html(JSON.stringify(ret));
+                })
+                .fail(function(e){
+                    writeError(e);
+                });
+        });
+
+        $(".clear-log").click(function(e){
+
+            logging
+                .clear()
+                .done(function(ret){
+                    writeActionLog("clear log", ret);
+                 })
+                .fail(function(e){
+                    writeError(e);
+                 });
+
+        });
+
+        $("#clearConfirmation").click(function(e){
+
+            $("#confirmationLog").empty();
+            
+        });
+
+        $("#clearErrors").click(function(e){
+
+            $("#errorLog").empty();
+            
+        });
+
+
+        function writeError(errorObj){
+
+            if($.isPlainObject(errorObj)){
+                errorObj = errorObj.toString();
+            }
+
+            var $errorLog = $("#errorLog"),
+                errorLog = "error :" + "<br/>" + errorObj + "<br/>" + $errorLog.html();
+
+            $errorLog.html(errorLog);
+
+
+        }
+
+        function writeActionLog(action, message){
+
+            if($.isPlainObject(message)){
+                message = message.toString();
+            }
+
+            var $confirm = $("#confirmationLog"),
+                confirm = "action " + action + "<br/>" + message + "<br/>" + $confirm.html();
+
+            $confirm.html(confirm);
+
+        }
+        </script>
+    </body>
+</html>

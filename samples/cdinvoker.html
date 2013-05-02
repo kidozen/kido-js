@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Kidozen Samples</title>        
+        <meta name="viewport" content="width=device-width, initial-scale=1"> 
+
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+        <script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+        <style>
+            #object {
+                height: 100px;
+            }
+        </style>
+    </head>
+    <body>
+
+    <div id="storage" data-role="page">
+        
+        <div data-role="header">
+            <h1>Kidozen - CD Invoker Samples</h1>
+            <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
+        </div>
+
+        <div data-role="content">
+            
+            <div data-role="fieldcontain">
+              <label for="objSetName">Url:</label>
+              <input type="text" name="url" id="url" value="http://odata.netflix.com/Catalog/Titles?$top=3&$format=json" placeholder="Url..."/>
+            </div>
+
+            <button id="get" class="btn" value="GET">GET</button>
+            
+            <section id="logs" class="ui-body ui-body-b">
+                <button type="button" id="clearConfirmation" class="btn">Clear Logs</button>
+                <button type="button" id="clearErrors" class="btn">Clear Errors</button>
+                <div class="ui-grid-a">
+                    <span class="ui-block-a">Logs</span>
+                    <span class="ui-block-b">Errors</span>
+                    <div id="confirmationLog" class="log-view ui-block-a"></div>
+                    <div id="errorLog" class="log-view ui-block-b"></div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- KIDOZEN SDK -->
+    <script src="/js/kido-0.0.1.js"></script>
+    
+    <script type="text/javascript">
+        
+        $('#get').click(function ( e ) { 
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            var url = $("#url").val();
+
+            $.ajax({
+                    url: '/cdinvoker/' + encodeURIComponent(url),
+                    type: 'GET'
+                })
+                .done(function(e){
+                    writeActionLog("cdinvoker", e);
+                })
+                .fail(function(e){
+                    writeError(e);
+                });
+        });
+
+        $("#clearConfirmation").click(function(e){
+
+            $("#confirmationLog").empty();
+            
+        });
+
+        $("#clearErrors").click(function(e){
+
+            $("#errorLog").empty();
+            
+        });
+
+
+        function writeError(errorObj){
+
+            if($.isPlainObject(errorObj)){
+                errorObj = JSON.stringify(errorObj);
+            }
+
+            var $errorLog = $("#errorLog"),
+                errorLog = "error :" + "<br/>" + errorObj + "<br/>" + $errorLog.html();
+
+            $errorLog.html(errorLog);
+
+        }
+
+        function writeActionLog(action, message){
+
+            if($.isPlainObject(message)){
+                message = message.toString();
+            }
+
+            var $confirm = $("#confirmationLog"),
+                confirm = "action " + action + "<br/>" + message + "<br/>" + $confirm.html();
+
+            $confirm.html(confirm);
+
+        }
+    </script>
+
+    </body>
+</html> 
