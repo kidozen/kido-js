@@ -1,3 +1,4 @@
+//KidoZen Javascript SDK v0.1.0. Copyright (c) 2013 Kidozen, Inc. MIT Licensed
 jQuery.extend({
 
 	crossDomain: function(options) {

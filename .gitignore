@@ -2,3 +2,4 @@ node_modules/
 kidozen.config
 npm-debug.log
 tests.xml
+tmp

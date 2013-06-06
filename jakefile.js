@@ -21,10 +21,12 @@ var async             = {async:true},
     phantomjs         = path.join(__dirname, win ? "bin/phantomjs-1.9.0-windows/phantomjs.exe" : "bin/phantomjs-1.9.0-macosx/bin/phantomjs"),
     phantomjsRunner   = path.join(__dirname, 'tests', 'runner.js'),
     jsDir             = path.join(__dirname,"/lib/"),
-    fileOut           = pkg.name + '-' + pkg.version + '.js',
-    fileOutMin        = pkg.name + '-' + pkg.version + '.min.js',
+    fileOut           = pkg.name + '.js',
+    fileOutMin        = pkg.name + '.min.js',
     fileOutForTests   = path.join(__dirname, 'tests', 'js', 'kido.js'),
     fileOutForSamples = path.join(__dirname, 'samples', 'js', 'kido.js'),
+    copyright         = path.join(__dirname, 'tmp', 'copyright.txt'),
+    fileOutMinTmp     = path.join(__dirname, 'tmp', 'kido.min.js'),
     files             = [
         path.join(jsDir,"jquery.crossdomain.js"),
         path.join(jsDir,"json2.js"),
@@ -49,24 +51,37 @@ task('clean', function () {
 
     console.log('');
 
-    [fileOut, fileOutMin, fileOutForTests, fileOutForSamples].forEach(safeDelete);
+    [copyright, fileOut, fileOutMin, fileOutMinTmp, fileOutForTests, fileOutForSamples].forEach(safeDelete);
 
     console.log('');
     console.log('Successfully cleaned files.');
 });
 
-desc('unify');
-task('unify', ['clean'], async, function () {
+
+desc('creates a temporary directory.');
+directory('tmp');
+
+
+desc('prepares the copyright for unify and minify');
+task('copyright', ['tmp'], function () {
+    var header = "// KidoZen Javascript SDK v" + pkg.version + ".\n" +
+                 "// Copyright (c) 2013 Kidozen, Inc. MIT Licensed";
+    fs.writeFileSync(copyright, header, 'utf8');
+});
+
+
+desc('unify the SDK with the copyright label.');
+task('unify', ['clean', 'copyright'], async, function () {
 
     console.log('');
     console.log('Unifying files to: ' + fileOut);
     // Using Google Closure
     new compressor.minify({
         type: 'no-compress',
-        fileIn: files,
+        fileIn: [copyright].concat(files),
         fileOut: fileOut,
         callback: function(err){
-            
+
             if ( err ) {
                 console.error('unable to unify.');
                 console.error(err);
@@ -77,7 +92,7 @@ task('unify', ['clean'], async, function () {
             fs.createReadStream(fileOut)
                 .pipe(fs.createWriteStream(fileOutForTests));
 
-            console.log('Copying file to samples folder.')
+            console.log('Copying file to samples folder.');
             fs.createReadStream(fileOut)
                 .pipe(fs.createWriteStream(fileOutForSamples));
 
@@ -87,8 +102,9 @@ task('unify', ['clean'], async, function () {
     });
 });
 
-desc('minifies the sdk');
-task('minify', ['clean'], async, function () {
+
+desc('applies the gcc to the sdk files and outputs to a tmp folder.');
+task('gcc', ['tmp'], async, function () {
 
     console.log('');
     console.log('building version ' + pkg.version + ' of ' + pkg.name);
@@ -97,10 +113,10 @@ task('minify', ['clean'], async, function () {
     new compressor.minify({
         type: 'gcc',
         fileIn: files,
-        fileOut: fileOutMin,
+        fileOut: fileOutMinTmp,
         callback: function(err){
             if (err) {
-                console.error('unable to unify and minify');
+                console.error('minify');
                 console.error(err);
             }
             complete();
@@ -108,13 +124,34 @@ task('minify', ['clean'], async, function () {
     });
 });
 
+
+desc('minifies the sdk and adds the copyright label.');
+task('minify', ['clean', 'copyright', 'gcc'], async, function () {
+
+    new compressor.minify({
+        type: 'no-compress',
+        fileIn: [copyright, fileOutMinTmp],
+        fileOut: fileOutMin,
+        callback: function (err) {
+
+            if (err) {
+                console.error('unable to minify and add copyright.');
+                console.error(err);
+            }
+            complete();
+        }});
+});
+
+
 desc('cleans, unifies and minifies the sdk');
 task('build', ['unify', 'minify']);
+
 
 desc('runs the unit tests against an actual kidozen environment');
 task('test', ['build'], async, function () {
     test();
 });
+
 
 desc('runs the unit tests and outputs a report in xunit format');
 task('report', async, function ( output ) {
@@ -127,6 +164,7 @@ task('report', async, function ( output ) {
         test(output);
     }
 });
+
 
 desc('unifies and minifies the files.');
 task('default', ['build']);
