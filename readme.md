@@ -40,6 +40,8 @@ Run jake task to build the SDK:
 
 	jake
 
+Notice: that the unify and minify tasks are using node-minify which in turns requires `Java` to be installed and accessible through the `PATH` environment variable.
+
 ##Running the tests
 
 Notice that our unit tests run against an actual instance of KidoZen. This means you will need to have a valid KidoZen environment with an actual app to run these tests. If you haven't done so yet, you can go to [http://kidozen.com](http://kidozen.com) to sign up.
