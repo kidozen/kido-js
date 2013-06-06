@@ -12,8 +12,6 @@ if (system.args.length === 1) {
 var address = system.args[1],
     output  = system.args[2]; // || 'output.xml';
 
-console.log('Output: ', output);
-
 page.open(address, function (status) {
 
     if (status !== 'success') {
@@ -67,9 +65,8 @@ page.open(address, function (status) {
         for(var i in tests) {
             var test = tests[i];
             if (!test.success) {
-                console.error('---');
                 console.error(test.name+':');
-                console.error(test.error);
+                console.error(JSON.stringify(test.error, 0, 2));
                 console.error('---');
                 errors++;
             }

@@ -160,7 +160,7 @@ var test = function ( output ) {
         var options = { stdio: 'inherit' },
             url = 'http://localhost:3000' + (output ? '#xunit' : '');
 
-        console.log("Url: ", url);
+        console.log("Testing url: ", url);
 
         sp = spawn(phantomjs, [phantomjsRunner, url, output || ''], options);
         sp.on('close', function ( code ) {
