@@ -3,6 +3,7 @@ Kidozen Javascript SDK
 
 You can use the Javascript SDK to build HTML5 Web Applications that run in the KidoZen platform. For more information about KidoZen, visit our [website](http://kidozen.com).
 
+
 ##Using the SDK
 
 In order to use the SDK in your web applications you can download the unified and minified versions of the SDK, or you can generate it from the source code. Before you can add the reference to the SDK, you will have to make sure you have this dependencies already reference:
@@ -15,7 +16,27 @@ In order to add the reference, copy the sdk to your app's folder (in this case w
 
 	<script src="/js/kido.js"></script>
 
-Note: The SDK files usually contain the version number in their name, for instance: kido-js-0.1.0.js and kido-js-0.1.0.min.js, so make sure to reference using the right file name.
+
+##Running the samples
+
+Running the samples is pretty similar to running the tests from the browser, but you will use a different folder.
+
+Install the kido client tool (if you haven't):
+
+	npm install -g kido
+
+Login to your hosting environment:
+
+	kido hosting mycompany.kidocloud.com
+	(... will prompt for user & pass ...)
+
+Start the emulator from the samples folder:
+
+	cd samples
+	kido app-run myapp mycompany.kidocloud.com
+
+Open http://localhost:3000 from your browser.
+
 
 ##Building the SDK from the source
 
@@ -41,6 +62,7 @@ Run jake task to build the SDK:
 	jake
 
 Notice: that the unify and minify tasks are using node-minify which in turns requires `Java` to be installed and accessible through the `PATH` environment variable.
+
 
 ##Running the tests
 
@@ -80,20 +102,6 @@ Run the emulator from the tests folder:
 
 Now you are ready to open http://localhost:3000 from any browser.
 
-##Running the samples
-
-Running the samples is pretty similar to running the tests from the browser, but you will use a different folder.
-
-Install the kido client tool (if you haven't):
-
-	npm install -g kido
-
-Start the emulator from the samples folder:
-
-	cd samples
-	kido app-run myapp mycompany.kidocloud.com
-
-Open http://localhost:3000 from your browser.
 
 ##FAQs
 
@@ -108,6 +116,7 @@ Either you forgot the `-g` option when executing the npm command, or the folder 
 ###Found a problem with the kido tool, where can I report it?
 
 You can do so in the github repository [here](https://github.com/kidozen/kido).
+
 
 ##License
 
