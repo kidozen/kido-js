@@ -24,7 +24,7 @@ describe("kido storage", function () {
 					});
 			});
 	});
-
+	
 	it("should drop an object set", function ( done ) {
 
 		var objectSet = new Kido().storage().objectSet('foo');
@@ -264,25 +264,32 @@ describe("kido storage", function () {
 
 	it("should query objects by field", function ( done ) {
 		
-		var objectSet = new Kido().storage().objectSet('foo');
+		var objectSet = new Kido().storage().objectSet('xyz');
 
-		$.when(objectSet.drop(), objectSet.insert({name: 'john'}), objectSet.insert({name: 'jake'}))
-			.fail(done)
-			.done(function () {
-
-				//query for john.
-				objectSet
-					.query({name:'john'})
+		objectSet
+			.drop()
+			.always(function () {
+				
+				$
+					.when(objectSet.insert({name: 'john'}), objectSet.insert({name: 'jake'}))
 					.fail(done)
-					.done(function ( list ) {
+					.done(function () {
 
-						expect(list).to.be.an('array');
-						expect(list.length).to.be.equal(1);
-						expect('john').to.be.equal(list[0].name);
+						//query for john.
+						objectSet
+							.query({name:'john'})
+							.fail(done)
+							.done(function ( list ) {
 
-						done();
-					});
+								expect(list).to.be.an('array');
+								expect(list.length).to.be.equal(1);
+								expect(list[0].name).to.be.equal('john');
+
+								done();
+							});
+					});	
 			});
+		
 	});
 	
 });

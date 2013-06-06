@@ -31,6 +31,8 @@ describe("kido logging", function () {
 
 	it("should clear log and log that it's been cleared", function ( done ) {
 
+		this.timeout(20 * 1000);
+		
 		var logging = new Kido().logging();
 
 		$.when(logging.writeInfo('first'), logging.writeInfo('second'))
