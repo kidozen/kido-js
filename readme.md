@@ -95,15 +95,15 @@ Open http://localhost:3000 from your browser.
 
 ##FAQs
 
-I don't have the `npm` command, where can I get it?
+###I don't have the `npm` command, where can I get it?
 
 Npm tool is installed together with node.js. If you have problems installing node.js, let us know.
 
-Why am I getting 'command not found' when running jake or kido?
+###Why am I getting 'command not found' when running jake or kido?
 
 Either you forgot the `-g` option when executing the npm command, or the folder where the global binaries are stored is not in your `PATH` environment variable.
 
-Found a problem with the kido tool, where can I report it?
+###Found a problem with the kido tool, where can I report it?
 
 You can do so in the github repository [here](https://github.com/kidozen/kido).
 
