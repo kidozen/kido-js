@@ -9,12 +9,16 @@ describe("kido queues", function () {
 		//push an object first.
 		queue
 			.push({greeting: "hello"})
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function () {
 
 				queue
 					.dequeue()
-					.fail(done)
+					.fail(function (jqXHR, textStatus, errorThrown){
+			            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+					})
 					.done(function (msg) {
 
 						expect(msg).to.be.ok();

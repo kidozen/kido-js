@@ -8,7 +8,9 @@ describe("kido config", function () {
 
 		config
 			.set("foo", {name:"foo"})
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function () {
 
 				config
@@ -30,7 +32,9 @@ describe("kido config", function () {
 
 		config
 			.set("foo", "bar")
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function () {
 
 				config
@@ -51,7 +55,9 @@ describe("kido config", function () {
 
 		config
 			.set("foo", { a: 2 })
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function () {
 
 				config
@@ -73,19 +79,25 @@ describe("kido config", function () {
 		//create a temp value foo.
 		config
 			.set("foo", "bar")
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function () {
 
 				//delete foo
 				config
 					.del("foo")
-					.fail(done)
+					.fail(function (jqXHR, textStatus, errorThrown){
+			            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+					})
 					.done(function () {
 
 						//make sure it doesn"t exist anymore
 						config
 							.get("foo")
-							.fail(done)
+							.fail(function (jqXHR, textStatus, errorThrown){
+					            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+							})
 							.done(function ( foo ) {
 
 								expect(foo).to.be.equal(null);

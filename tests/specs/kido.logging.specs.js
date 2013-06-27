@@ -8,7 +8,9 @@ describe("kido logging", function () {
 
 		logging
 			.writeInfo("something great happened.")
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function () {
 				done();
 			});
@@ -20,7 +22,9 @@ describe("kido logging", function () {
 
 		logging
 			.get()
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function ( evts ) {
 
 				expect(evts).to.be.an('array');
@@ -36,17 +40,23 @@ describe("kido logging", function () {
 		var logging = new Kido().logging();
 
 		$.when(logging.writeInfo('first'), logging.writeInfo('second'))
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function () {
 
 				logging
 					.clear()
-					.fail(done)
+					.fail(function (jqXHR, textStatus, errorThrown){
+			            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+					})
 					.done(function () {
 
 						logging
 							.get()
-							.fail(done)
+							.fail(function (jqXHR, textStatus, errorThrown){
+					            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+							})
 							.done(function (evts) {
 
 								expect(evts.length).to.be.equal(1);

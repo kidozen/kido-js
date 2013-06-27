@@ -9,12 +9,16 @@ describe("kido storage", function () {
 		storage
 			.objectSet('just-in-case')
 			.insert({name:'foo'})
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function () {
 
 				storage
 					.getObjectSetNames()
-					.fail(done)
+					.fail(function (jqXHR, textStatus, errorThrown){
+			            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+					})
 					.done(function (names) {
 
 						//assert
@@ -32,17 +36,23 @@ describe("kido storage", function () {
 		//insert an object in order to create the object set.
 		objectSet
 			.insert({name:'it should create the object set'})
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function ( obj ) {
 
 				objectSet
 					.drop()
-					.fail(done)
+					.fail(function (jqXHR, textStatus, errorThrown){
+			            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+					})
 					.done(function ( obj ) {
 
 						new Kido().storage()
 							.getObjectSetNames()
-							.fail(done)
+							.fail(function (jqXHR, textStatus, errorThrown){
+					            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+							})
 							.done(function ( names ) {
 								
 								var exists = false;
@@ -64,7 +74,9 @@ describe("kido storage", function () {
 
 		objectSet
 			.insert({name:'it should insert object'})
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function ( obj ) {
 				//asserts
 				expect(obj).to.be.an('object');
@@ -85,12 +97,16 @@ describe("kido storage", function () {
 		//insert an object.
 		objectSet
 			.insert({name:'it should insert object'})
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function ( obj ) {
 				//now get it by _id
 				objectSet
 					.get(obj._id)
-					.fail(done)
+					.fail(function (jqXHR, textStatus, errorThrown){
+			            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+					})
 					.done(function ( retrieved ) {
 						//assert
 						expect(retrieved).to.be.ok();
@@ -123,17 +139,23 @@ describe("kido storage", function () {
 
 		objectSet
 			.insert({name:'it should insert object'})
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function ( obj ) {
 
 				objectSet
 					.del(obj._id)
-					.fail(done)
+					.fail(function (jqXHR, textStatus, errorThrown){
+			            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+					})
 					.done(function() {
 
 						objectSet
 							.get(obj._id)
-							.fail(done)
+							.fail(function (jqXHR, textStatus, errorThrown){
+					            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+							})
 							.done(function ( empty ) {
 								expect(empty).to.be.equal(null);
 								done();
@@ -148,13 +170,17 @@ describe("kido storage", function () {
 
 		objectSet
 			.insert({name:'it should insert object'})
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function ( obj ) {
 
 				obj.name = 'new name';
 				objectSet
 					.update(obj)
-					.fail(done)
+					.fail(function (jqXHR, textStatus, errorThrown){
+			            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+					})
 					.done(function ( updObj ) {
 
 						expect(updObj.name).to.be.equal('new name');
@@ -171,13 +197,17 @@ describe("kido storage", function () {
 
 		objectSet
 			.insert({name:'it should insert object'})
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function ( obj ) {
 
 				obj.name = 'new name';
 				objectSet
 					.update(obj)
-					.fail(done)
+					.fail(function (jqXHR, textStatus, errorThrown){
+			            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+					})
 					.done(function ( updObj) {
 						
 						updObj._metadata.sync = updObj._metadata.sync - 1;
@@ -203,7 +233,9 @@ describe("kido storage", function () {
 		//insert an object.
 		objectSet
 			.save({name:'it should insert object'})
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function ( obj ) {
 
 				expect(obj).to.be.ok();
@@ -221,13 +253,17 @@ describe("kido storage", function () {
 		//insert an object.
 		objectSet
 			.save({name:'it should insert object'})
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function ( obj ) {
 				
 				obj.name = 'new name';
 				objectSet
 					.save(obj)
-					.fail(done)
+					.fail(function (jqXHR, textStatus, errorThrown){
+			            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+					})
 					.done(function ( newObj) {
 						
 						expect(newObj).to.be.ok();
@@ -246,12 +282,16 @@ describe("kido storage", function () {
 		//insert an object.
 		objectSet
 			.insert({name:'it should insert object'})
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function ( obj ) {
 				//query objects
 				objectSet
 					.query({})
-					.fail(done)
+					.fail(function (jqXHR, textStatus, errorThrown){
+			            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+					})
 					.done(function ( list ) {
 						//asserts
 						expect(list).to.be.ok();
@@ -272,13 +312,17 @@ describe("kido storage", function () {
 				
 				$
 					.when(objectSet.insert({name: 'john'}), objectSet.insert({name: 'jake'}))
-					.fail(done)
+					.fail(function (jqXHR, textStatus, errorThrown){
+			            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+					})
 					.done(function () {
 
 						//query for john.
 						objectSet
 							.query({name:'john'})
-							.fail(done)
+							.fail(function (jqXHR, textStatus, errorThrown){
+					            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+							})
 							.done(function ( list ) {
 
 								expect(list).to.be.an('array');

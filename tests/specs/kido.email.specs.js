@@ -38,7 +38,9 @@ describe("kido email", function () {
 
 		email
 			.send('nobody@kidozen.com', 'no-reply@kidozen.com')
-			.fail(done)
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			})
 			.done(function () { done(); });
 	});
 });

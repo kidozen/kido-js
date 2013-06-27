@@ -22,7 +22,9 @@ describe.skip("kido pubsub", function () {
 		setTimeout(function () {
 			chat
 				.publish({greeting: "hello"})
-				.fail(done)
+				.fail(function (jqXHR, textStatus, errorThrown){
+		            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+				})
 				.done(function () { console.log('sent')});
 
 		}, 20000);
@@ -56,7 +58,9 @@ describe.skip("kido pubsub", function () {
 
 					chat
 						.publish({greeting:"hello again"})
-						.fail(done)
+						.fail(function (jqXHR, textStatus, errorThrown){
+				            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+						})
 						.done(function () {
 
 							console.log('sent again');
@@ -70,7 +74,9 @@ describe.skip("kido pubsub", function () {
 		setTimeout(function () {
 			chat
 				.publish({greeting: "hello"})
-				.fail(done)
+				.fail(function (jqXHR, textStatus, errorThrown){
+		            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+				})
 				.done(function () { console.log('sent')});
 
 		}, 20000);

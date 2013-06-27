@@ -9,7 +9,9 @@ describe("kido services", function () {
 				expect(data.foo).to.be.equal("bar");
 				done();
 			})
-			.fail(done);
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			});
 	});
 
 	it("should invoke using defaults", function ( done ) {
@@ -23,6 +25,9 @@ describe("kido services", function () {
 				expect(data.kido).to.be.equal("zen");
 				done();
 			})
-			.fail(done);
+			.fail(function (jqXHR, textStatus, errorThrown){
+	            done(new Error("Failed with status:"+jqXHR.status+", responseText:"+jqXHR.responseText+", textStatus:"+textStatus+", errorThrown:"+errorThrown));
+			});
+
 	});
 });
