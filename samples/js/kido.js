@@ -1,4 +1,5 @@
-//KidoZen Javascript SDK v0.1.0. Copyright (c) 2013 Kidozen, Inc. MIT Licensed
+// KidoZen Javascript SDK v0.1.2.
+// Copyright (c) 2013 Kidozen, Inc. MIT Licensed
 jQuery.extend({
 
 	crossDomain: function(options) {
@@ -1492,7 +1493,7 @@ var KidoService = function ( kidoApp, name ) {
 
     this.invoke = function ( name, opts ) {
 
-        var args = $.extend(self._defaults, opts);
+        var args = $.extend({}, self._defaults, opts);
         return self.app.post("/api/services/" + self.name + "/invoke/" + name, args);
     };
 };
