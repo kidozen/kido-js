@@ -14,6 +14,15 @@ describe("kido services", function () {
             });
     });
 
+    it("should fail when method fails", function (done) {
+        new Kido()
+            .services("echo")
+            .invoke("fail", { foo: "bar" })
+            .fail(function ( data ) {
+                expect(data.foo).to.be.equal("bar");
+                done();
+            });
+    })
     it("should invoke using defaults", function ( done ) {
         new Kido()
             .services("echo")
