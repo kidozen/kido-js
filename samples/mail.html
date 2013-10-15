@@ -46,6 +46,10 @@
                     <label for="bodyHtml">bodyHtml</label>
                     <input type="text" id="bodyHtml">
                 </div>
+                <div data-role="attachment">
+                    <label for="attachment">attachment</label>
+                    <input type="file" id="attachment">
+                </div>
                 <input id="sendMail" type="submit" value="send">
             </form>
         </div>
@@ -54,9 +58,10 @@
     <!-- KIDOZEN SDK -->
     <script src="/js/kido.js"></script>
     
-    
     <script type="text/javascript">
         $(document).ready(function() {
+
+            var email = new Kido().email();
 
             $("#clearLogButton").click(function(e) {
                 e.preventDefault();
@@ -69,22 +74,40 @@
                 e.preventDefault();
                 e.stopPropagation();
 
-                var mail = new Kido().mail();
+                var mail =  {
+                    to: $("#to").val(),
+                    from: $("#from").val(),
+                    subject: $("#subject").val(),
+                    bodyText: $("#bodyText").val(),
+                    bodyHtml: $("#bodyHtml").val()
+                }; 
 
-                mail
-                    .send({
-                        to: $("to").val(),
-                        from: $("from").val(),
-                        subject: $("subject").val(),
-                        bodyText: $("bodyText").val(),
-                        bodyHtml: $("bodyHtml").val()
-                    })
-                    .done(function() {
-                        alert('email sent');
-                    })
-                    .fail(function() {
-                        alert('email not sent.');
-                    });
+                if ($("#attachment").val()) {
+                    
+                    email
+                        .attach($("#attachment")[0].files[0])
+                        .done(function (attachments) {
+                            mail.attachments = attachments;
+                            return email.send(mail);
+                        }) 
+                        .done(function() {
+                            alert('email sent');
+                        })
+                        .fail(function() {
+                            alert('email not sent.');
+                        });
+                
+                } else {
+
+                    email
+                        .send(mail)
+                        .done(function() {
+                            alert('email sent');
+                        })
+                        .fail(function() {
+                            alert('email not sent.');
+                        });
+                }
             });
         });
 
