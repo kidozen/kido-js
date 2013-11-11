@@ -1,4 +1,4 @@
-// KidoZen Javascript SDK v0.1.3.
+// KidoZen Javascript SDK v0.1.4.
 // Copyright (c) 2013 Kidozen, Inc. MIT Licensed
 jQuery.extend({
 
