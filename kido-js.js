@@ -1,73 +1,5 @@
 // KidoZen Javascript SDK v0.1.4-cordova.
 // Copyright (c) 2013 Kidozen, Inc. MIT Licensed
-jQuery.extend({
-
-	crossDomain: function(options) {
-	
-		var deferred = $.Deferred();
-
-		if (!XMLHttpRequest && !XDomainRequest) {
-			throw 'Unsupported Browser.';
-		}
-
-		var request = new XMLHttpRequest();
-		
-		if(request.withCredentials == undefined) {
-			throw 'Browser doesn\'t support CORS.';
-		}
-	
-		var handler = function(evtXHR) {
-
-			if (request.readyState == 4) {
-
-                if (request.status == 200) {
-                	
-                	var data = null;
-
-                	if (request.responseXML != null) {
-                		data = request.responseXML
-                	}
-                    else if(request.responseText != null) {
-						try
-						{
-						   data = JSON.parse(request.responseText);
-						}
-						catch(e)
-						{
-						   data = request.responseText;
-						}
-                    }
-
-                    deferred.resolve(data);
-                }
-        	}
-		};
-
-		request.open(options.type, options.url, true);
-		request.onreadystatechange = handler;
-		request.send();
-
-		return deferred;
-			
-			/* TODO: Make this work on IE
-			else if (XDomainRequest)
-			{
-				if (options.headers) 
-				{
-					for(var headerName in options.headers)
-					{
-						request.setRequestHeader(headerName, options.headers[headerName]);
-					}
-				}
-
-			 	// IE8
-			 	var xdr = new XDomainRequest();
-			 	xdr.open(options.method, options.url);
-			 	xdr.send();
-			}*/
-	}
-
-});
 /*
     json2.js
     2011-10-19
@@ -556,36 +488,6 @@ if (!JSON) {
     }
 }());
 
-wsTrustClient = function(endpointAddress) {
-
-    var endpoint = endpointAddress;
-
-    var templates  = {
-        rst : '<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:a="http://www.w3.org/2005/08/addressing" xmlns:u="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"><s:Header><a:Action s:mustUnderstand="1">http://docs.oasis-open.org/ws-sx/ws-trust/200512/RST/Issue</a:Action><a:To s:mustUnderstand="1">[To]</a:To><o:Security s:mustUnderstand="1" xmlns:o="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><o:UsernameToken u:Id="uuid-6a13a244-dac6-42c1-84c5-cbb345b0c4c4-1"><o:Username>[Username]</o:Username><o:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">[Password]</o:Password></o:UsernameToken></o:Security></s:Header><s:Body><trust:RequestSecurityToken xmlns:trust="http://docs.oasis-open.org/ws-sx/ws-trust/200512"><wsp:AppliesTo xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy"><a:EndpointReference><a:Address>[ApplyTo]</a:Address></a:EndpointReference></wsp:AppliesTo><trust:KeyType>http://docs.oasis-open.org/ws-sx/ws-trust/200512/Bearer</trust:KeyType><trust:RequestType>http://docs.oasis-open.org/ws-sx/ws-trust/200512/Issue</trust:RequestType><trust:TokenType>urn:oasis:names:tc:SAML:2.0:assertion</trust:TokenType></trust:RequestSecurityToken></s:Body></s:Envelope>'
-    };
-
-    this.requestToken = function (options) {
-
-        var message = templates.rst
-            .replace("[To]", endpoint)
-            .replace("[Username]", options.username)
-            .replace("[Password]", options.password)
-            .replace("[ApplyTo]", options.scope);
-
-
-        return $.ajax({
-                    dataType: 'XML',
-                    crossDomain: true,
-                    url: endpoint,
-                    type: 'POST',
-                    data: message,
-                    headers: {
-                        'Content-Type': 'application/soap+xml; charset=utf-8',
-                        'Content-Length': message.length
-                    }
-                });
-    };
-}
 /**
  * Kido - Kidozen representation of an Application.
  *
