@@ -1,4 +1,4 @@
-// KidoZen Javascript SDK v0.1.4.
+// KidoZen Javascript SDK v0.1.4-cordova.
 // Copyright (c) 2013 Kidozen, Inc. MIT Licensed
 jQuery.extend({
 
@@ -585,29 +585,6 @@ wsTrustClient = function(endpointAddress) {
                     }
                 });
     };
-
-    function handler(evtXHR)
-    {
-        if (invocation.readyState == 4)
-        {
-                if (invocation.status == 200)
-                {
-                    var response = invocation.responseXML;
-                }
-                else
-                {
-                    alert("Invocation Errors Occured");
-                }
-        }
-    }
-
-    var parseRstr = function(rstr){
-        var startOfAssertion = rstr.indexOf('<Assertion ');
-        var endOfAssertion = rstr.indexOf('</Assertion>') + '</Assertion>'.length;
-        var token = rstr.substring(startOfAssertion, endOfAssertion);
-        
-        return token;
-    };
 }
 /**
  * Kido - Kidozen representation of an Application.
@@ -638,6 +615,38 @@ var Kido = function (name, marketplace) {
         });
     }
 
+    function wsTrustToken (opts) {
+        var template = '<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:a="http://www.w3.org/2005/08/addressing" xmlns:u="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"><s:Header><a:Action s:mustUnderstand="1">http://docs.oasis-open.org/ws-sx/ws-trust/200512/RST/Issue</a:Action><a:To s:mustUnderstand="1">[To]</a:To><o:Security s:mustUnderstand="1" xmlns:o="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><o:UsernameToken u:Id="uuid-6a13a244-dac6-42c1-84c5-cbb345b0c4c4-1"><o:Username>[Username]</o:Username><o:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">[Password]</o:Password></o:UsernameToken></o:Security></s:Header><s:Body><trust:RequestSecurityToken xmlns:trust="http://docs.oasis-open.org/ws-sx/ws-trust/200512"><wsp:AppliesTo xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy"><a:EndpointReference><a:Address>[ApplyTo]</a:Address></a:EndpointReference></wsp:AppliesTo><trust:KeyType>http://docs.oasis-open.org/ws-sx/ws-trust/200512/Bearer</trust:KeyType><trust:RequestType>http://docs.oasis-open.org/ws-sx/ws-trust/200512/Issue</trust:RequestType><trust:TokenType>urn:oasis:names:tc:SAML:2.0:assertion</trust:TokenType></trust:RequestSecurityToken></s:Body></s:Envelope>';
+        return $.ajax({
+                    dataType: 'XML',
+                    crossDomain: true,
+                    url: opts.endpoint,
+                    type: 'POST',
+                    data: template
+                        .replace("[To]", opts.endpoint)
+                        .replace("[Username]", opts.user)
+                        .replace("[Password]", opts.pass)
+                        .replace("[ApplyTo]", opts.scope),
+                    headers: {
+                        'Content-Type': 'application/soap+xml; charset=utf-8'
+                    }
+                });
+    }
+
+    function wrapToken (opts) {
+        var form = {
+            "wrap_name": opts.user,
+            "wrap_password": opts.pass,
+            "wrap_scope": opts.scope
+        };
+        return $.ajax({
+            url: opts.endpoint,
+            data: form,
+            type: 'POST',
+            dataType: 'text'
+        });
+    }
+
     this.authenticate = function (user, pass, prov) {
         
         if (!this.active) throw new Error("No need to authenticate to this Web App");
@@ -649,15 +658,21 @@ var Kido = function (name, marketplace) {
 
             if (!ip) throw new Error("Invalid Identity Provider");
             if (!ip.protocol) throw new Error("Invalid Identity Provider Protocol");
-            if (ip.protocol.toLowerCase() !== "wrapv0.9") throw new Error("Protocol not supported yet.");
 
-            var form = {
-                "wrap_name": user,
-                "wrap_password": pass,
-                "wrap_scope": config.authServiceScope
-            };
+            var getToken;
+            if (ip.protocol.toLowerCase() === "wrapv0.9")
+                getToken = wrapToken;
+            else if (ip.protocol.toLowerCase() === "ws-trust")
+                getToken = wsTrustToken;
+            else
+                throw new Error("Protocol not supported yet.");
 
-            return $.ajax({url: ip.endpoint, data: form, type: 'POST', dataType: 'text'}).pipe(function (body){
+            return getToken({
+                user: user,
+                pass: pass,
+                scope: config.authServiceScope,
+                endpoint: ip.endpoint
+            }).pipe(function (body){
                 var assertion = (/<Assertion(.*)<\/Assertion>/.exec(body) || [])[0];
                 if (!assertion) throw new Error("Unable to get a token from IDP");
                 //get a kidozen token
@@ -670,7 +685,6 @@ var Kido = function (name, marketplace) {
                         wrap_assertion_format : "SAML"
                     }
                 };
-
                 return $.ajax(postRequest).pipe(function (token) {
                     self.authenticated = true;
                     token.token = 'WRAP access_token="' + token.rawToken + '"';
@@ -693,7 +707,6 @@ var Kido = function (name, marketplace) {
             return $.Deferred().reject({ msg: "Not a valid ajax URL.", error: "Invalid URL"});
 
         var defaults = {
-            url: "",
             type: "POST",
             cache: true
         };
@@ -706,12 +719,8 @@ var Kido = function (name, marketplace) {
         if (self.active && self.authenticated) {
             return self.token.pipe(function (token) {
                 opts.url = self.url + opts.url;
-                // opts.url = opts.url.replace('https', 'http');
                 opts.headers = opts.headers || {};
                 opts.headers.authorization = token.token;
-                // opts.xhrFields = {
-                //     withCredentials: true
-                // };
                 console.log('opts', opts);
                 return $.ajax(opts);
             });
@@ -1074,10 +1083,38 @@ var KidoNotifications = function ( kidoApp ) {
         if (typeof(badge)==='number') notification.badge = badge;
         if (param) notification.param = param;
 
-        return parentKido.send({
-            url: "/notifications/push/" + parentKido.applicationName + "/" + channel,
+        return self.app.send({
+            url: "/notifications/push/" + self.app.name + "/" + channel,
             type: "POST",
             data: JSON.stringify(notification)
+        });
+    };
+    
+    /**
+     * subscribe to a push notification channel to start receiving
+     * events.
+     * @param {string} deviceId to uniquely identify the device
+     * @param {string} channel of events
+     * @param {string} subscriptionId is the platform specific id of push
+     *                 notification's service registration.
+     * @param {string} platform "gcm" | "apns" | "c2dm" | "mpns" | "wns"
+     * @api public
+     */
+    this.subscribe = function (deviceId, channel, subscriptionId, platform) {
+
+        if (!deviceId) throw "'deviceId' argument is required.";
+        if (!channel) throw "'channel' argument is required.";
+        if (!subscriptionId) throw "'subscriptionId' argument is required.";
+        if (!platform) throw "'platform' is required. Use one of: gcm, apns, c2dm, mpns or wns.";
+
+        return self.app.send({
+            url: "/notifications/subscriptions/" + self.app.name + "/" + channel,
+            type: "POST",
+            data: JSON.stringify({
+                deviceId: deviceId,
+                subscriptionId: subscriptionId,
+                platform: platform
+            })
         });
     };
 };
