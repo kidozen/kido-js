@@ -28,7 +28,6 @@ var async             = {async:true},
     copyright         = path.join(__dirname, 'tmp', 'copyright.txt'),
     fileOutMinTmp     = path.join(__dirname, 'tmp', 'kido.min.js'),
     files             = [
-        path.join(jsDir,"json2.js"),
         path.join(jsDir,"kido.js"),
         path.join(jsDir,"kido.config.js"),
         path.join(jsDir,"kido.email.js"),
