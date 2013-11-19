@@ -688,32 +688,23 @@ var KidoConfig = function ( kidoApp ) {
     this.app = kidoApp;
 
     this.set = function ( name, data ) {
-
         if(!name) throw "The config key 'name' is required to set a value.";
-
         return self.app.post("/config/" + name, data);
     };
 
     this.get = function ( name ) {
-
         if(!name) throw "The config key 'name' is required to retrieve the value.";
-
         return self.app.get("/config/" + name);
     };
 
     this.getAll = function () {
-
         return self.app.get("/config");
-
     };
 
     this.del = function (name) {
-
         if(!name) throw "The config key 'name' is required to delete a value.";
-
         return self.app.del("/config/" + name);
     };
-
 };
 
 
@@ -724,9 +715,7 @@ var KidoConfig = function ( kidoApp ) {
  */
 
 Kido.prototype.config = function() {
-
     if (!this._config) this._config = new KidoConfig(this);
-
     return this._config;
 };
 
@@ -765,7 +754,7 @@ var KidoEmail = function ( kidoApp ) {
             attachments = bodyHtml;
             bodyHtml = null;
         }
-        
+        //construct email object.
         var mail = { to: to, from: from };
         if (typeof(subject)  === 'string' && subject.length>0 ) mail.subject  = subject;
         if (typeof(bodyText) === 'string' && bodyText.length>0) mail.bodyText = bodyText;
@@ -783,32 +772,26 @@ var KidoEmail = function ( kidoApp ) {
     this.attach = function (formOrName, data, progress) {
 
         if (formOrName instanceof HTMLFormElement) {
-        
             formOrName = new FormData(formOrName);
         }
 
         if (formOrName instanceof HTMLInputElement) {
-
             if (!(formOrName.type) || formOrName.type.toLowerCase() !== 'file') throw "HTML Input element must be of type 'file'.";
             formOrName = formOrName.files[0]
         }
 
         if (formOrName instanceof File) {
-
             var file = formOrName;
             formOrName = new FormData();
             formOrName.append(file.name, file);
         }
 
         if (formOrName instanceof FormData) {
-            
             if (typeof(data) === 'function') {
                 progress = data;
                 data = null;
             }
-
         } else if (typeof(formOrName) === 'string') {
-            
             var name = formOrName;
             formOrName = new FormData();    
 
@@ -817,9 +800,7 @@ var KidoEmail = function ( kidoApp ) {
             if (!(data instanceof Blob))    throw "'data' argument must be a string, a Blob instance or a File instance.";
 
             formOrName.append(name, data, name);
-            
         } else {
-
             throw "The argument 'formOrName' is invalid.";
         }
 
@@ -842,7 +823,7 @@ var KidoEmail = function ( kidoApp ) {
         oXHR.send(formOrName);
 
         return dfd.promise();
-    }
+    };
 };
 
 /**
@@ -852,9 +833,7 @@ var KidoEmail = function ( kidoApp ) {
  */
 
 Kido.prototype.email = function() {
-
     if (!this._email) this._email = new KidoEmail(this);
-
     return this._email;
 };
 
@@ -953,7 +932,6 @@ var KidoLogging = function ( kidoApp ) {
  */
 
 Kido.prototype.logging = function() {
-
     if (!this._logging) this._logging = new KidoLogging(this);
     return this._logging;
 };
@@ -1022,7 +1000,6 @@ var KidoNotifications = function ( kidoApp ) {
 };
 
 Kido.prototype.notifications = function() {
-
     if (!this._notifications) this._notifications = new KidoNotifications(this);
     return this._notifications;
 };
@@ -1043,7 +1020,6 @@ var KidoPubsub = function ( kidoApp ) {
     this.app = kidoApp;
 
     this.channel = function ( name ) {
-
         return new KidoPubsubChannel(name, self.app);
     };
 };
@@ -1083,7 +1059,6 @@ var KidoPubsubChannel = function ( name, app ) {
 };
 
 Kido.prototype.pubsub = function () {
-
     if (!this._pubsub) this._pubsub = new KidoPubsub(this);
     return this._pubsub;
 };
@@ -1128,7 +1103,6 @@ var KidoQueues = function ( kidoApp ) {
 };
 
 Kido.prototype.queues = function () {
-
     if (!this._queues) this._queues = new KidoQueues(this);
     return this._queues;
 };
@@ -1158,7 +1132,6 @@ var KidoSecurity = function ( kidoApp ) {
 };
 
 Kido.prototype.security = function() {
-
     if (!this._security) this._security = new KidoSecurity(this);
     return this._security;
 };
@@ -1191,7 +1164,6 @@ var KidoSms = function ( kidoApp ) {
 };
 
 Kido.prototype.sms = function() {
-
     if (!this._sms) this._sms = new KidoSms(this);
     return this._sms;
 };
@@ -1231,18 +1203,14 @@ var KidoObjectSet = function ( name, parentStorage ) {
     if (!parentStorage) throw "KidoObjectSet needs a parent KidoStorage object.";
 
     //propeties
-
     this.storage =  parentStorage;
     this.name = name || 'default';
     this.rootUrl = this.storage.rootUrl + "/" + this.name;
 
-
-    /** methods **/
-
     /**
+     * invoke an operation on an object set
      * @api private
      */
-
     this.invoke = function ( data ) {
 
         if (!data) throw "The storage 'data' argument is required";
@@ -1260,14 +1228,11 @@ var KidoObjectSet = function ( name, parentStorage ) {
             (data.objectId ? "/" + data.objectId : "") +
             (data.indexes ? "/" + data.indexes : "") +
             (params.length ? "?" + params.join("&") : "");
-
         data.settings.url = encodeURI(data.settings.url);
-
         data.settings.cache = data.cache;
 
         return self.storage.app.send(data.settings);
     };
-
 
     /**
      * inserts an object in the KidoZen Object Storage backend service.
@@ -1277,7 +1242,6 @@ var KidoObjectSet = function ( name, parentStorage ) {
      *                              user.
      * @api public
      */
-
     this.insert = function ( obj, isPrivate ) {
 
         if(!obj) throw "The object set 'obj' argument is requiered in order to insert.";
@@ -1406,7 +1370,6 @@ var KidoObjectSet = function ( name, parentStorage ) {
      */
 
     this.query = function ( query, fields, options, cache ) {
-
         return self.invoke ({
             settings: { type: "GET" },
             query: query,
@@ -1440,7 +1403,6 @@ var KidoObjectSet = function ( name, parentStorage ) {
     };
 };
 
-
 Kido.prototype.storage = function () {
     //cache the KidoStorage instance
     if (!this._storage) this._storage = new KidoStorage(this);
@@ -1463,13 +1425,11 @@ var KidoStorageIndexes = function ( objectSet ) {
     this.objectSet = objectSet;
 
     this.all = function () {
-
         var data = {
             indexes: "indexes",
             settings: {
                 type: "GET"
         }};
-
         return self.objectSet.invoke(data);
     };
 
@@ -1482,11 +1442,11 @@ var KidoStorageIndexes = function ( objectSet ) {
             settings: {
                 type: "GET"
         }};
-
         return self.objectSet.invoke(data);
     };
 
     this.del = function (name) {
+        
         if(!name) throw "The 'name' argument is required to delete an object set index.";
 
         var data = {
@@ -1494,7 +1454,6 @@ var KidoStorageIndexes = function ( objectSet ) {
             settings: {
                 type: "DELETE"
         }};
-
         return self.objectSet.invoke(data);
     };
 
@@ -1529,15 +1488,12 @@ var KidoStorageIndexes = function ( objectSet ) {
                 type: "POST",
                 data: JSON.stringify(index)
         }};
-
         return self.objectSet.invoke(data);
     };
 };
 
 KidoObjectSet.prototype.indexes = function() {
-
     if (!this._indexes) this._indexes = new KidoStorageIndexes(this);
-
     return this._indexes;
 };
 /**
@@ -1563,11 +1519,9 @@ var KidoService = function ( kidoApp, name ) {
     /** methods **/
 
     this.defaults = function ( opts ) {
-
         self._defaults = $.extend(self._defaults, opts || {});
         return self;
     };
-
 
     this.invoke = function ( name, opts, timeout ) {
         var result = $.Deferred();
