@@ -1,4 +1,4 @@
-// KidoZen Javascript SDK v0.1.4.
+// KidoZen Javascript SDK v0.1.4b.
 // Copyright (c) 2013 Kidozen, Inc. MIT Licensed
 jQuery.extend({
 
@@ -886,7 +886,6 @@ Kido.prototype.email = function() {
 
     return this._email;
 };
-
 /**
  * access to the logging backend service.
  *
@@ -903,23 +902,23 @@ var KidoLogging = function ( kidoApp ) {
     this.app = kidoApp;
 
     this.writeVerbose = function (data) {
-        return this.write(data, 0);
+        return self.write(data, 0);
     };
 
     this.writeInfo = function (data) {
-        return this.write(data, 1);
+        return self.write(data, 1);
     };
 
     this.writeWarning = function (data) {
-        return this.write(data, 2);
+        return self.write(data, 2);
     };
 
     this.writeError = function (data) {
-        return this.write(data, 3);
+        return self.write(data, 3);
     };
 
     this.writeCritical = function (data) {
-        return this.write(data, 4);
+        return self.write(data, 4);
     };
 
     this.write = function (data, level) {
@@ -986,6 +985,7 @@ Kido.prototype.logging = function() {
     if (!this._logging) this._logging = new KidoLogging(this);
     return this._logging;
 };
+
 
 /**
  * access to the Notifications backend service.
