@@ -2,7 +2,7 @@
   "author": "Kidozen Team",
   "name": "kido-js",
   "description": "Javascript SDK for kidozen platform.",
-  "version": "0.1.5-refresh",
+  "version": "0.1.5",
   "dependencies": {
     "node-minify": "*",
     "kido":"latest"

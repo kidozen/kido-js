@@ -15,7 +15,10 @@ var Kido = function (name, marketplace) {
     if (!(this instanceof Kido)) return new Kido();
     
     var self = this;
-
+    var _username = null; // keep the username, password and provider
+    var _password = null; // in memory as private variables in order
+    var _provider = null; // to refresh tokens when they expire.
+    
     // initialize properties
     this.name          = name || 'local';  // backward compatibility
     this.marketplace   = marketplace;
@@ -80,7 +83,13 @@ var Kido = function (name, marketplace) {
                     }
                 };
                 return $.ajax(postRequest).pipe(function (token) {
+                    // make sure we got a token
+                    if (!token || !token.rawToken)
+                        return $.Deferred().reject("Unable to retrieve KidoZen token.");
                     self.authenticated = true;
+                    _username = user;
+                    _password = pass;
+                    _provider = prov;
                     token.token = 'WRAP access_token="' + token.rawToken + '"';
                     // parse the token and get the claims and the expiration date.
                     var tokenData = decodeURIComponent(token.rawToken);
@@ -123,12 +132,21 @@ var Kido = function (name, marketplace) {
             opts.contentType = "application/json";
 
         if (self.active && self.authenticated) {
-            return self.token.pipe(function (token) {
-                opts.url = self.url + opts.url;
-                opts.headers = opts.headers || {};
-                opts.headers.authorization = token.token;
-                return $.ajax(opts);
-            });
+            return self.token
+                .pipe(function (token) {
+                    // if the token expired, then user the cached credentials
+                    // to refresh the KidoZen token.
+                    if (token.expiresOn < new Date().getTime()) {
+                        return self.authenticate(_username, _password, _provider);
+                    }
+                    return token;
+                })
+                .pipe(function (token) {
+                    opts.url = self.url + opts.url;
+                    opts.headers = opts.headers || {};
+                    opts.headers.authorization = token.token;
+                    return $.ajax(opts);
+                });
         }
         return $.ajax(opts);
     };
