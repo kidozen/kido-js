@@ -40,6 +40,7 @@
   <script src="/js/expect.js"></script>
   <script src="/js/mocha.js"></script>
   <script src="/js/mocha.html-xunit.js"></script>
+  <script src="/js/sinon.js"></script>
   <script>
     if (window.location.hash === '#xunit') {
       mocha.reporter(HTMLXunit);
@@ -55,7 +56,7 @@
   <script src="/specs/kido.pubsub.specs.js"></script>
   <script src="/specs/kido.queue.specs.js"></script>
   <script src="/specs/kido.services.specs.js"></script>
-
+  <script src="/specs/kido.authenticate.specs.js"></script>
   <script>
     mocha.run(function () { $("#mocha").addClass("finished"); });
   </script>

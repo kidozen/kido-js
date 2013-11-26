@@ -1,4 +1,4 @@
-// KidoZen Javascript SDK v0.1.4-cordova.
+// KidoZen Javascript SDK v0.1.5-refresh.
 // Copyright (c) 2013 Kidozen, Inc. MIT Licensed
 /**
  * Kido - Kidozen representation of an Application.
@@ -12,71 +12,46 @@ if (!JSON || !JSON.parse || !JSON.stringify) throw "KidoZen requires JSON.string
 
 var Kido = function (name, marketplace) {
 
+    if (!(this instanceof Kido)) return new Kido();
+    
     var self = this;
 
-    if (!(this instanceof Kido)) return new Kido();
-
-    //leave this for backward compatibility.
-    this.name = name || 'local';
-    this.marketplace = marketplace;
-
-    //initialize variables
-    this.local  = this.name === 'local';
-    this.active = !!marketplace;
+    // initialize properties
+    this.name          = name || 'local';  // backward compatibility
+    this.marketplace   = marketplace;
+    this.local         = this.name === 'local';
+    this.active        = !!marketplace;
     this.authenticated = this.active ? false : true;
 
+    // get the application security configuration in case of
+    // active authentication.
     if (this.active) {
         this.authConfig = $.ajax({
             url: this.marketplace + "/publicapi/apps?name=" + this.name
         }).pipe(function (config) {
+            if (!config || !config.length)
+                return $.Deferred().reject("Application configuration not found.");
             self.url = config[0].url.substring(0, config[0].url.length - 1);
             return config[0].authConfig;
         });
     }
 
-    function wsTrustToken (opts) {
-        var template = '<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:a="http://www.w3.org/2005/08/addressing" xmlns:u="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"><s:Header><a:Action s:mustUnderstand="1">http://docs.oasis-open.org/ws-sx/ws-trust/200512/RST/Issue</a:Action><a:To s:mustUnderstand="1">[To]</a:To><o:Security s:mustUnderstand="1" xmlns:o="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><o:UsernameToken u:Id="uuid-6a13a244-dac6-42c1-84c5-cbb345b0c4c4-1"><o:Username>[Username]</o:Username><o:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">[Password]</o:Password></o:UsernameToken></o:Security></s:Header><s:Body><trust:RequestSecurityToken xmlns:trust="http://docs.oasis-open.org/ws-sx/ws-trust/200512"><wsp:AppliesTo xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy"><a:EndpointReference><a:Address>[ApplyTo]</a:Address></a:EndpointReference></wsp:AppliesTo><trust:KeyType>http://docs.oasis-open.org/ws-sx/ws-trust/200512/Bearer</trust:KeyType><trust:RequestType>http://docs.oasis-open.org/ws-sx/ws-trust/200512/Issue</trust:RequestType><trust:TokenType>urn:oasis:names:tc:SAML:2.0:assertion</trust:TokenType></trust:RequestSecurityToken></s:Body></s:Envelope>';
-        return $.ajax({
-                    dataType: 'text',
-                    crossDomain: true,
-                    url: opts.endpoint,
-                    type: 'POST',
-                    data: template
-                        .replace("[To]", opts.endpoint)
-                        .replace("[Username]", opts.user)
-                        .replace("[Password]", opts.pass)
-                        .replace("[ApplyTo]", opts.scope),
-                    headers: {
-                        'Content-Type': 'application/soap+xml; charset=utf-8'
-                    }
-                });
-    }
-
-    function wrapToken (opts) {
-        var form = {
-            "wrap_name": opts.user,
-            "wrap_password": opts.pass,
-            "wrap_scope": opts.scope
-        };
-        return $.ajax({
-            url: opts.endpoint,
-            data: form,
-            type: 'POST',
-            dataType: 'text'
-        });
-    }
-
+    /**
+     * authenticate to the KidoZen Application using the IDP in the app
+     * security configuration.
+     * @api public
+     */
     this.authenticate = function (user, pass, prov) {
         
-        if (!this.active) throw new Error("No need to authenticate to this Web App");
+        if (!this.active) return $.Deferred().reject("No need to authenticate to this Web App");
         
         this.token = this.authConfig.pipe(function (config) {
             var ips = config.identityProviders;
             prov = prov || Object.keys(ips)[0];
             var ip = ips[prov];
 
-            if (!ip) throw new Error("Invalid Identity Provider");
-            if (!ip.protocol) throw new Error("Invalid Identity Provider Protocol");
+            if (!ip) return $.Deferred().reject("Invalid Identity Provider");
+            if (!ip.protocol) return $.Deferred().reject("Invalid Identity Provider Protocol");
 
             var getToken;
             if (ip.protocol.toLowerCase() === "wrapv0.9")
@@ -84,7 +59,7 @@ var Kido = function (name, marketplace) {
             else if (ip.protocol.toLowerCase() === "ws-trust")
                 getToken = wsTrustToken;
             else
-                throw new Error("Protocol not supported yet.");
+                return $.Deferred().reject("Protocol not supported yet.");
 
             return getToken({
                 user: user,
@@ -93,8 +68,8 @@ var Kido = function (name, marketplace) {
                 endpoint: ip.endpoint
             }).pipe(function (body){
                 var assertion = (/<Assertion(.*)<\/Assertion>/.exec(body) || [])[0];
-                if (!assertion) throw new Error("Unable to get a token from IDP");
-                //get a kidozen token
+                if (!assertion) return $.Deferred().reject("Unable to get a token from IDP");
+                // get a kidozen token
                 var postRequest = {
                     url : config.authServiceEndpoint,
                     type : "POST",
@@ -107,6 +82,19 @@ var Kido = function (name, marketplace) {
                 return $.ajax(postRequest).pipe(function (token) {
                     self.authenticated = true;
                     token.token = 'WRAP access_token="' + token.rawToken + '"';
+                    // parse the token and get the claims and the expiration date.
+                    var tokenData = decodeURIComponent(token.rawToken);
+                    var claims = tokenData.split("&");
+                    token.claims = claims;
+                    for (var i in claims) {
+                        var c = claims[i];
+                        if (c.indexOf("ExpiresOn") > -1) {
+                            // adjust the expiration 20 seconds before it actually
+                            // expires so that it doesn't expire due to latency.
+                            token.expiresOn = ~~(c.split("=")[1]) - 20*1000;
+                            break;
+                        }
+                    }
                     return token;
                 });
             });
@@ -184,7 +172,49 @@ var Kido = function (name, marketplace) {
      this.del = function ( url, settings ) {
         settings = $.extend({url: url, type: "DELETE"}, settings || {});
         return self.send(settings);
-     };
+    };
+
+    // Helper methods
+
+    /**
+     * Ws-Trust strategy for authentication
+     * @api private
+     */
+    function wsTrustToken (opts) {
+        var template = '<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:a="http://www.w3.org/2005/08/addressing" xmlns:u="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"><s:Header><a:Action s:mustUnderstand="1">http://docs.oasis-open.org/ws-sx/ws-trust/200512/RST/Issue</a:Action><a:To s:mustUnderstand="1">[To]</a:To><o:Security s:mustUnderstand="1" xmlns:o="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><o:UsernameToken u:Id="uuid-6a13a244-dac6-42c1-84c5-cbb345b0c4c4-1"><o:Username>[Username]</o:Username><o:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">[Password]</o:Password></o:UsernameToken></o:Security></s:Header><s:Body><trust:RequestSecurityToken xmlns:trust="http://docs.oasis-open.org/ws-sx/ws-trust/200512"><wsp:AppliesTo xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy"><a:EndpointReference><a:Address>[ApplyTo]</a:Address></a:EndpointReference></wsp:AppliesTo><trust:KeyType>http://docs.oasis-open.org/ws-sx/ws-trust/200512/Bearer</trust:KeyType><trust:RequestType>http://docs.oasis-open.org/ws-sx/ws-trust/200512/Issue</trust:RequestType><trust:TokenType>urn:oasis:names:tc:SAML:2.0:assertion</trust:TokenType></trust:RequestSecurityToken></s:Body></s:Envelope>';
+        return $.ajax({
+                    dataType: 'text',
+                    crossDomain: true,
+                    url: opts.endpoint,
+                    type: 'POST',
+                    data: template
+                        .replace("[To]", opts.endpoint)
+                        .replace("[Username]", opts.user)
+                        .replace("[Password]", opts.pass)
+                        .replace("[ApplyTo]", opts.scope),
+                    headers: {
+                        'Content-Type': 'application/soap+xml; charset=utf-8'
+                    }
+                });
+    }
+
+    /**
+     * wrapv0.9 strategy for authentication
+     * @api private
+     */
+    function wrapToken (opts) {
+        var form = {
+            "wrap_name": opts.user,
+            "wrap_password": opts.pass,
+            "wrap_scope": opts.scope
+        };
+        return $.ajax({
+            url: opts.endpoint,
+            data: form,
+            type: 'POST',
+            dataType: 'text'
+        });
+    }
 };
 
 /**
