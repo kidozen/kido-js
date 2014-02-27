@@ -39,7 +39,8 @@ var async             = {async:true},
         path.join(jsDir,"kido.sms.js"),
         path.join(jsDir,"kido.storage.js"),
         path.join(jsDir,"kido.storage.indexes.js"),
-        path.join(jsDir,"kido.services.js")
+        path.join(jsDir,"kido.services.js"),
+        path.join(jsDir,"kido.datasources.js")
     ];
 
 

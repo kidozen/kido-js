@@ -45,7 +45,7 @@
     if (window.location.hash === '#xunit') {
       mocha.reporter(HTMLXunit);
     }
-    mocha.setup('bdd')
+    mocha.setup('bdd');
   </script>
 
   <!-- test suites -->
@@ -58,6 +58,7 @@
   <script src="/specs/kido.services.specs.js"></script>
   <script src="/specs/kido.authenticate.specs.js"></script>
   <script src="/specs/kido.sms.specs.js"></script>
+  <script src="/specs/kido.datasources.specs.js"></script>
   <script>
     mocha.run(function () { $("#mocha").addClass("finished"); });
   </script>
