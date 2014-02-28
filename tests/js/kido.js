@@ -1141,12 +1141,16 @@ var KidoDatasource = function ( kidoApp, name ) {
     };
 
     this.query = function ( opts, timeout ) {
+        if (!timeout && $.isNumeric(opts)){
+            timeout = opts;
+            opts = null;
+        }
         var result = $.Deferred();
         var args = $.extend({}, self._defaults, opts);
-        var qs = "?"+ $.param(args);
+        var qs = Object.keys(args).length > 0 ? "?"+ $.param(args) : "";
         var settings = timeout ? { headers: { "timeout": timeout } } : {};
         self.app
-            .get("/api/v2/datasources/" + self.name + qs, args, settings)
+            .get("/api/v2/datasources/" + self.name + qs, settings)
             .done(function ( res ) {
                 if (res.error) {
                     return result.reject(res.error);
@@ -1160,6 +1164,10 @@ var KidoDatasource = function ( kidoApp, name ) {
     };
 
     this.invoke = function ( opts, timeout ) {
+        if (!timeout && $.isNumeric(opts)){
+            timeout = opts;
+            opts = null;
+        }
         var result = $.Deferred();
         var args = $.extend({}, self._defaults, opts);
         var settings = timeout ? { headers: { "timeout": timeout } } : {};
