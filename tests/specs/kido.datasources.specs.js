@@ -89,7 +89,15 @@ describe("kido datasources", function () {
     it("should support querying a datasource with args", function (done) {
         new Kido()
             .datasources("test-query")
-            .query({foo:"bar", baz:"bat"},10)
+            .query(
+                {
+                    strParam:"fookey", 
+                    objParam:{k1:"v1",k2:2},
+                    boolParam:true,
+                    arrParam:["a","b","c"],
+                    numParam:78.9
+                }
+                ,10)
             .done(function ( data ) {           
                 expect(data.status).to.be.equal(200);
                 done();
@@ -102,7 +110,7 @@ describe("kido datasources", function () {
     it("should support invoking an operation ds with args", function (done) {
         new Kido()
             .datasources("test-operation")
-            .invoke({foo:"bar", baz:"bat"},20)
+            .invoke({strParam:"fookey", objParam:{k1:"v1",k2:2},boolParam:true,arrParam:["a","b","c"],numParam:78.9},20)
             .done(function ( data ) {           
                 expect(data.status).to.be.equal(200);
                 done();

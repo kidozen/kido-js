@@ -236,9 +236,18 @@ var emulate = function ( cb ) {
 
     var config = { hosting: hosting, user: user, pass: pass },
         api    = kido(config),
-        folder = path.join(__dirname, 'tests');
+        folder = path.join(__dirname, 'tests'),
+        credentials = {
+            username: user,
+            password: pass,
+            ip: { 
+                name: "Kidozen",
+                activeEndpoint: "https://identity.kidozen.com/wrapv0.9",
+                protocol: "wrapv0.9"
+            }
+        };
 
-    api.emulate(app, folder, cb);
+    api.emulate(credentials,app, folder, cb);
 };
 
 
