@@ -45,7 +45,7 @@ describe("kido sms", function () {
 		}
 	});
 
-	it("should send an sms", function ( done ) {
+	it.skip("should send an sms", function ( done ) {
 
 		this.timeout(5000);
 		
