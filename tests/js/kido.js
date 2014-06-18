@@ -1191,6 +1191,7 @@ var KidoDatasource = function ( kidoApp, name ) {
     };
 
     this.query = function ( opts, timeout ) {
+        // $.isNumeric requires jQuery 1.7+
         if (!timeout && $.isNumeric(opts)){
             timeout = opts;
             opts = null;
@@ -1214,6 +1215,7 @@ var KidoDatasource = function ( kidoApp, name ) {
     };
 
     this.invoke = function ( opts, timeout ) {
+        // $.isNumeric requires jQuery 1.7+
         if (!timeout && $.isNumeric(opts)){
             timeout = opts;
             opts = null;
