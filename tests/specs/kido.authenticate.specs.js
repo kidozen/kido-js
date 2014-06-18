@@ -108,7 +108,7 @@ describe("kido authentication", function () {
     
     var tomorrow = ~~(new Date().getTime() / 1000) + 86400;
     var kidozenToken = {
-        "rawToken": "http%3a%2f%2fschemas.kidozen.com%2fdomain=kidozen.com&http%3a%2f%2fschemas.kidozen.com%2fusersource=Admins+(Kidozen)&http%3a%2f%2fschemas.xmlsoap.org%2fws%2f2005%2f05%2fidentity%2fclaims%2femailaddress=armonia%40kidozen.com&http%3a%2f%2fschemas.xmlsoap.org%2fws%2f2005%2f05%2fidentity%2fclaims%2fname=Armonia+Admin&http%3a%2f%2fschemas.kidozen.com%2frole=Application+Admin&http%3a%2f%2fschemas.kidozen.com%2faction=allow+all+*&http%3a%2f%2fschemas.microsoft.com%2faccesscontrolservice%2f2010%2f07%2fclaims%2fidentityprovider=https%3a%2f%2fidentity.kidozen.com%2f&Audience=http%3a%2f%2ftasks.armonia.kidocloud.com%2f&"+
+        "access_token": "http%3a%2f%2fschemas.kidozen.com%2fdomain=kidozen.com&http%3a%2f%2fschemas.kidozen.com%2fusersource=Admins+(Kidozen)&http%3a%2f%2fschemas.xmlsoap.org%2fws%2f2005%2f05%2fidentity%2fclaims%2femailaddress=armonia%40kidozen.com&http%3a%2f%2fschemas.xmlsoap.org%2fws%2f2005%2f05%2fidentity%2fclaims%2fname=Armonia+Admin&http%3a%2f%2fschemas.kidozen.com%2frole=Application+Admin&http%3a%2f%2fschemas.kidozen.com%2faction=allow+all+*&http%3a%2f%2fschemas.microsoft.com%2faccesscontrolservice%2f2010%2f07%2fclaims%2fidentityprovider=https%3a%2f%2fidentity.kidozen.com%2f&Audience=http%3a%2f%2ftasks.armonia.kidocloud.com%2f&"+
                     "ExpiresOn="+tomorrow+"&"+
                     "Issuer=https%3a%2f%2fkido-armonia.accesscontrol.windows.net%2f&HMACSHA256=mDEGilqWwMLoTgV27YrjbwERYp81jPE17m%2bHfsvPsSM%3d",
         "expirationTime": "2013-11-26T19:37:23.856Z"
@@ -128,13 +128,13 @@ describe("kido authentication", function () {
         expect(this.server.requests.length).to.be.equal(4);
         expect(this.server.requests[3].method).to.be.equal('GET');
         expect(this.server.requests[3].url).to.be.equal('https://tasks.armonia.kidocloud.com/storage/local/tasks?query=%7B%7D');
-        expect(this.server.requests[3].requestHeaders.authorization).to.be.equal('WRAP access_token="'+kidozenToken.rawToken+'"');
+        expect(this.server.requests[3].requestHeaders.authorization).to.be.equal('WRAP access_token="'+kidozenToken.access_token+'"');
     });
 
     it("should refresh the token when it expires", function () {
         var now = ~~(new Date().getTime() / 1000);
         var expiredToken = {
-            "rawToken": "http%3a%2f%2fschemas.kidozen.com%2fdomain=kidozen.com&http%3a%2f%2fschemas.kidozen.com%2fusersource=Admins+(Kidozen)&http%3a%2f%2fschemas.xmlsoap.org%2fws%2f2005%2f05%2fidentity%2fclaims%2femailaddress=armonia%40kidozen.com&http%3a%2f%2fschemas.xmlsoap.org%2fws%2f2005%2f05%2fidentity%2fclaims%2fname=Armonia+Admin&http%3a%2f%2fschemas.kidozen.com%2frole=Application+Admin&http%3a%2f%2fschemas.kidozen.com%2faction=allow+all+*&http%3a%2f%2fschemas.microsoft.com%2faccesscontrolservice%2f2010%2f07%2fclaims%2fidentityprovider=https%3a%2f%2fidentity.kidozen.com%2f&Audience=http%3a%2f%2ftasks.armonia.kidocloud.com%2f&"+
+            "access_token": "http%3a%2f%2fschemas.kidozen.com%2fdomain=kidozen.com&http%3a%2f%2fschemas.kidozen.com%2fusersource=Admins+(Kidozen)&http%3a%2f%2fschemas.xmlsoap.org%2fws%2f2005%2f05%2fidentity%2fclaims%2femailaddress=armonia%40kidozen.com&http%3a%2f%2fschemas.xmlsoap.org%2fws%2f2005%2f05%2fidentity%2fclaims%2fname=Armonia+Admin&http%3a%2f%2fschemas.kidozen.com%2frole=Application+Admin&http%3a%2f%2fschemas.kidozen.com%2faction=allow+all+*&http%3a%2f%2fschemas.microsoft.com%2faccesscontrolservice%2f2010%2f07%2fclaims%2fidentityprovider=https%3a%2f%2fidentity.kidozen.com%2f&Audience=http%3a%2f%2ftasks.armonia.kidocloud.com%2f&"+
                         "ExpiresOn=" + now + "&"+
                         "Issuer=https%3a%2f%2fkido-armonia.accesscontrol.windows.net%2f&HMACSHA256=mDEGilqWwMLoTgV27YrjbwERYp81jPE17m%2bHfsvPsSM%3d"
         };

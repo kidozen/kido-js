@@ -3,3 +3,4 @@ kidozen.config
 npm-debug.log
 tests.xml
 tmp
+.idea/
