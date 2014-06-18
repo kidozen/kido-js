@@ -1,4 +1,6 @@
 describe("kido authentication", function () {
+
+    this.timeout(10000);
     
     beforeEach(function () {
         this.server = sinon.fakeServer.create();
@@ -11,7 +13,7 @@ describe("kido authentication", function () {
         var kido = new Kido('tasks', 'armonia.kidocloud.com');
         expect(this.server.requests.length).to.be.equal(1);
         expect(this.server.requests[0].method).to.be.equal('GET');
-        expect(this.server.requests[0].url).to.be.equal('armonia.kidocloud.com/publicapi/apps?name=tasks');
+        expect(this.server.requests[0].url).to.be.equal('https://armonia.kidocloud.com/publicapi/apps?name=tasks');
     });
 
     it("should fail when application's security configuration is not found", function (done) {
@@ -163,4 +165,18 @@ describe("kido authentication", function () {
         expect(this.server.requests[5].url).to.be.equal('https://tasks.armonia.kidocloud.com/storage/local/tasks?query=%7B%7D');
         expect(this.server.requests[5].requestHeaders.authorization).to.be.ok();
     });
+
+    // TODO: fix the following two tests
+    it("should throw exception if invalid marketplace url", function (done) {
+        var kido = new Kido("tasks", "completely-wrong-url://.com");
+        expect(kido).to.not.be.an('object');
+    });
+
+    it("should return error if invalid marketplace", function (done) {
+        var kido = new Kido("tasks", "https://invalid-tenant-url.com");
+        kido.authenticate().fail(function (err) {
+            expect(err).to.be.equal("Unable to retrieve application configuration. Invalid marketplace url.");
+        });
+    });
+
 });
