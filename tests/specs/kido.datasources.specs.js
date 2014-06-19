@@ -1,5 +1,7 @@
 describe("kido datasources", function () {
 
+    this.timeout(10000);
+
     it("should query a datasource", function ( done ) {
 
         new Kido()

@@ -166,16 +166,21 @@ describe("kido authentication", function () {
         expect(this.server.requests[5].requestHeaders.authorization).to.be.ok();
     });
 
-    // TODO: fix the following two tests
     it("should throw exception if invalid marketplace url", function (done) {
-        var kido = new Kido("tasks", "completely-wrong-url://.com");
-        expect(kido).to.not.be.an('object');
+        try {
+            new Kido("tasks", "completely-wrong-url://.com");
+        } catch (e) {
+            expect(e).to.be.equal("Marketplace url must begin with https://");
+            done();
+        }
     });
 
+    // TODO: fix this test
     it("should return error if invalid marketplace", function (done) {
         var kido = new Kido("tasks", "https://invalid-tenant-url.com");
         kido.authenticate().fail(function (err) {
-            expect(err).to.be.equal("Unable to retrieve application configuration. Invalid marketplace url.");
+            expect(err).to.be.equal("Unable to retrieve application configuration. Marketplace url could be invalid.");
+            done();
         });
     });
 
