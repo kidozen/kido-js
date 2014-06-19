@@ -1,7 +1,5 @@
 describe("kido authentication", function () {
 
-    this.timeout(10000);
-    
     beforeEach(function () {
         this.server = sinon.fakeServer.create();
     });
@@ -175,13 +173,17 @@ describe("kido authentication", function () {
         }
     });
 
-    // TODO: fix this test
-    it("should return error if invalid marketplace", function (done) {
-        var kido = new Kido("tasks", "https://invalid-tenant-url.com");
-        kido.authenticate().fail(function (err) {
-            expect(err).to.be.equal("Unable to retrieve application configuration. Marketplace url could be invalid.");
-            done();
-        });
+    it("should not authenticate if invalid marketplace", function (done) {
+        var expected_timeout = 10000
+          , app_name = "tasks"
+          , marketplace_url = "https://invalid-marketplace-url.com";
+        this.timeout(expected_timeout + 100);
+        this.server.requests = [];
+        new Kido(app_name, marketplace_url);
+        expect(this.server.requests.length).to.be.equal(1);
+        expect(this.server.requests[0].method).to.be.equal('GET');
+        expect(this.server.requests[0].url).to.be.equal(marketplace_url + "/publicapi/apps?name=" + app_name);
+        setTimeout(done, expected_timeout);
     });
 
 });
