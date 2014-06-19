@@ -173,7 +173,7 @@ describe("kido authentication", function () {
         }
     });
 
-    it("should not authenticate if invalid marketplace", function (done) {
+    it("should timeout if invalid marketplace", function (done) {
         var expected_timeout = 10000
           , app_name = "tasks"
           , marketplace_url = "https://invalid-marketplace-url.com";
