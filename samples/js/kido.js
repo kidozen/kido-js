@@ -1531,7 +1531,9 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
         new_val._id = ($.now() * -1).toString();
         return self.query().pipe(function (values) {
             values.push(new_val);
-            return self.storeCollection(values);
+            return self.storeCollection(values).pipe(function () {
+                return new_val;
+            });
         });
     };
 
@@ -1559,14 +1561,16 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
                     return self.updateItem(new_val);
                 }, function () {
                     values.push(new_val);
-                    return self.storeCollection(values);
+                    return self.storeCollection(values).pipe(function () {
+                        return new_val;
+                    });
                 });
             } else if (values.length === 0) {
                 values.push(new_val);
-                return self.storeCollection(values);
-            } else {
-                return self.storeCollection(values);
             }
+            return self.storeCollection(values).pipe(function () {
+                return new_val;
+            });
         });
     };
 
@@ -1585,9 +1589,7 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
         } else if (typeof new_val._id !== 'undefined') {
             return self.updateItem(new_val);
         } else {
-            return self.insertItem(new_val).pipe(function () {
-                return new_val;
-            });
+            return self.insertItem(new_val);
         }
     };
 
