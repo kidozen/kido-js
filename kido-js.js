@@ -199,8 +199,6 @@ var Kido = function (name, marketplace) {
                 settings.type = 'POST';
                 delete object._id;
                 settings.data = JSON.stringify(object);
-                insert = true;
-                update = false;
                 objectId = null;
             }
         }
@@ -213,13 +211,11 @@ var Kido = function (name, marketplace) {
                 ajax.pipe(function (val) {
                     return collection.persist(val);
                 });
-            }
-            if (remove || (insert && local)) {
+            } else if (remove) {
                 ajax.pipe(function () {
                     return collection.del(objectId ? objectId : old_id);
                 });
-            }
-            if (drop) {
+            } else if (drop) {
                 ajax.pipe(function () {
                     return collection.drop();
                 });
@@ -231,7 +227,7 @@ var Kido = function (name, marketplace) {
                 // So that, the developer can notify their users that they are working offline.
                 var success = function (val) {
                     if (insert || update || remove || drop) {
-                        var id = drop ? ($.now() * -1).toString() : (val ? val._id : (objectId ? objectId : old_id));
+                        var id = drop ? ($.now() * -1).toString() : (remove ? objectId : (update ? old_id : val._id));
                         collection.localStorage.addPendingRequest(id, settings).then(function () {
                             deferred.resolve(val);
                         });
@@ -1372,6 +1368,16 @@ var KidoLocalStorage = function (kidoApp) {
         storeName: 'kidozen'
     });
 
+    localforage.setItemAsync = function (key, value) {
+        var deferred = $.Deferred();
+        localforage.setItem(key, value).then(function (inserted) {
+            deferred.resolve(inserted);
+        }, function () {
+            deferred.reject();
+        });
+        return deferred.promise();
+    };
+
     /** Private properties **/
     var self = this,
         executingPendingTasks = false,
@@ -1513,11 +1519,7 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
      * @api private
      */
     this.storeCollection = function (values) {
-        var deferred = $.Deferred();
-        localforage.setItem(self.name, values).then(function () {
-            deferred.resolve(values);
-        });
-        return deferred.promise();
+        return localforage.setItemAsync(self.name, values);
     };
 
     /**
@@ -1529,9 +1531,7 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
         new_val._id = ($.now() * -1).toString();
         return self.query().pipe(function (values) {
             values.push(new_val);
-            return localforage.setItem(self.name, values).then(function () {
-                return $.Deferred().resolve(new_val);
-            });
+            return self.storeCollection(values);
         });
     };
 
@@ -1556,17 +1556,16 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
                 // replace the id with the new one and persist the object
                 return self.localStorage.getNewIdFromDictionary(new_val._id).pipe(function (new_id) {
                     new_val._id = new_id;
-                    return updateItem(new_val);
+                    return self.updateItem(new_val);
                 }, function () {
                     values.push(new_val);
-                    return localforage.setItem(self.name, values).then(function () {
-                        return $.Deferred().resolve(new_val);
-                    });
+                    return self.storeCollection(values);
                 });
+            } else if (values.length === 0) {
+                values.push(new_val);
+                return self.storeCollection(values);
             } else {
-                return localforage.setItem(self.name, values).then(function () {
-                    return $.Deferred().resolve(new_val);
-                });
+                return self.storeCollection(values);
             }
         });
     };
@@ -1586,7 +1585,9 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
         } else if (typeof new_val._id !== 'undefined') {
             return self.updateItem(new_val);
         } else {
-            return self.insertItem(new_val);
+            return self.insertItem(new_val).pipe(function () {
+                return new_val;
+            });
         }
     };
 
