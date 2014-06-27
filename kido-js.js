@@ -1524,19 +1524,6 @@ var KidoLocalStorage = function (kidoApp) {
     };
 
     /**
-     * Returns a relation between the old object id and the new one.
-     *
-     * @param {string} old_id
-     * @returns {*}
-     * @api public
-     */
-    this.getNewIdFromDictionary = function (old_id) {
-        return dictionary.get(old_id, true).then(function (item) {
-            return item.new_id;
-        });
-    };
-
-    /**
      * Executes the requests stored in the pending requests queue.
      *
      * @returns {*}
@@ -1584,13 +1571,17 @@ var KidoLocalStorage = function (kidoApp) {
      * @api private
      */
     this.persistChange = function (req, res) {
-        if (typeof res !== 'object' || req._id === res._id) {
-            return $.Deferred().resolve();
-        }
         var col = self.collection(req.request.kidoService.service + '.' + req.request.kidoService.collection),
             old_id = req._id,
-            new_id = res._id;
+            new_id = typeof res === 'object' ? res._id : null;
+        if (!new_id) {
+            // Item was deleted
+            return col.del(old_id).then(function () {
+                return dictionary.del(old_id);
+            });
+        }
         return col.get(old_id, true).then(function (val) {
+            // Item found
             val._id = new_id;
             return col.persist(val);
         }, function () {
@@ -1600,14 +1591,30 @@ var KidoLocalStorage = function (kidoApp) {
                 return col.persist(object);
             });
         }).then(function () {
-            return col.del(old_id);
-        }).then(function () {
-            return dictionary.persist({
-                _id: old_id,
-                new_id: new_id
-            });
+            if (old_id !== new_id) {
+                return col.del(old_id).then(function () {
+                    return dictionary.persist({
+                        _id: old_id,
+                        new_id: new_id
+                    });
+                });
+            }
+            return $.Deferred().resolve();
         }, function () {
             return $.Deferred().resolve();
+        });
+    };
+
+    /**
+     * Returns a relation between the old object id and the new one.
+     *
+     * @param {string} old_id
+     * @returns {*}
+     * @api public
+     */
+    this.getNewIdFromDictionary = function (old_id) {
+        return dictionary.get(old_id, true).then(function (item) {
+            return item.new_id;
         });
     };
 
