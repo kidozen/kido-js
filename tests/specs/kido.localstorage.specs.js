@@ -1,13 +1,38 @@
 describe("kido local storage", function () {
 
+    var array = [
+        {
+            _id: 1,
+            property1: 'test',
+            property2: 1234
+        },
+        {
+            _id: 2,
+            property1: 'other test',
+            property2: 4321
+        }
+    ];
+
     var object = {
         property1: 'test',
         property2: 1234
     };
 
+    it('should store an array in local storage', function (done) {
+        var collection = new Kido().localStorage().collection('should-store');
+        collection.persist(array).then(function () {
+            return collection.length();
+        }).done(function (length) {
+            expect(length).to.be.equal(2);
+            done();
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            done(new Error('Failed with status:' + jqXHR.status + ', responseText:' + jqXHR.responseText + ', textStatus:' + textStatus + ', errorThrown:' + errorThrown));
+        });
+    });
+
     it('should insert an item in local storage', function (done) {
         var collection = new Kido().localStorage().collection('should-insert');
-        collection.persist(object).pipe(function (inserted) {
+        collection.persist(object).then(function (inserted) {
             expect(inserted).to.have.property('_id');
             expect(inserted._id).to.be.a('string');
             expect(parseInt(inserted._id)).to.be.lessThan(0);
@@ -25,9 +50,9 @@ describe("kido local storage", function () {
 
     it('should update an item in local storage', function (done) {
         var collection = new Kido().localStorage().collection('should-update');
-        collection.persist(object).pipe(function (inserted) {
+        collection.persist(object).then(function (inserted) {
             return collection.get(inserted._id);
-        }).pipe(function (retrieved) {
+        }).then(function (retrieved) {
             retrieved.property1 = 'modified';
             retrieved.property2 = 4321;
             return collection.persist(retrieved);
@@ -42,14 +67,22 @@ describe("kido local storage", function () {
         });
     });
 
-    // TODO: fix
+    it('should fail when trying to get a non existent object', function (done) {
+        var collection = new Kido().localStorage().collection('empty-store');
+        collection.get('non-existent-id').done(function () {
+            done(new Error('Should have failed'));
+        }).fail(function (err) {
+            expect(err).to.be.equal('Item not found');
+            done();
+        });
+    });
+
     it('should delete an item from local storage', function (done) {
         var collection = new Kido().localStorage().collection('should-delete');
-        collection.persist(object).pipe(function (inserted) {
+        collection.persist(object).then(function (inserted) {
             return collection.del(inserted._id);
-        }).pipe(function () {
-            // TODO: get is not rejecting the promise if item not found
-            return collection.get(inserted._id);
+        }).then(function () {
+            return collection.get(object._id);
         }).done(function () {
             done(new Error('Should have failed'));
         }).fail(function (err) {

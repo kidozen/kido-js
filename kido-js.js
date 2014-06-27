@@ -39,7 +39,7 @@ var Kido = function (name, marketplace) {
     if (!this.hosted) {
         this.authConfig = $.ajax({
             url: this.marketplace + "/publicapi/apps?name=" + this.name
-        }).pipe(function (config) {
+        }).then(function (config) {
             if (!config || !config.length) {
                 return $.Deferred().reject("Application configuration not found.");
             }
@@ -59,7 +59,7 @@ var Kido = function (name, marketplace) {
     this.authenticate = function () {
         if (this.hosted) return $.Deferred().reject("No need to authenticate to this Web App");
         var authArgs = arguments;
-        this.token = this.authConfig.pipe(function (config) {
+        this.token = this.authConfig.then(function (config) {
             if (authArgs.length === 0) {
                 return passiveAuth(config);
             }
@@ -98,7 +98,7 @@ var Kido = function (name, marketplace) {
 
         if (!self.hosted && self.authenticated) {
             return self.token
-                .pipe(function (token) {
+                .then(function (token) {
                     // if the token expired, then user the cached credentials
                     // to refresh the KidoZen token.
                     if (token.expiresOn < new Date().getTime()) {
@@ -106,7 +106,7 @@ var Kido = function (name, marketplace) {
                     }
                     return token;
                 })
-                .pipe(function (token) {
+                .then(function (token) {
                     opts.url = self.url + opts.url;
                     opts.headers = opts.headers || {};
                     opts.headers.authorization = token.token;
@@ -192,7 +192,7 @@ var Kido = function (name, marketplace) {
             if (getOne) {
                 return collection.get(objectId);
             } else if (remove) {
-                return collection.del(objectId).pipe(function () {
+                return collection.del(objectId).then(function () {
                     return collection.localStorage.removePendingRequest(objectId);
                 });
             } else if (update) {
@@ -208,15 +208,15 @@ var Kido = function (name, marketplace) {
         collection.localStorage.executePendingRequests().always(function () {
             var ajax = $.ajax(settings);
             if (getAll || insert || update) {
-                ajax.pipe(function (val) {
+                ajax.then(function (val) {
                     return collection.persist(val);
                 });
             } else if (remove) {
-                ajax.pipe(function () {
+                ajax.then(function () {
                     return collection.del(objectId ? objectId : old_id);
                 });
             } else if (drop) {
-                ajax.pipe(function () {
+                ajax.then(function () {
                     return collection.drop();
                 });
             }
@@ -343,7 +343,7 @@ var Kido = function (name, marketplace) {
             pass: pass,
             scope: config.authServiceScope,
             endpoint: ip.endpoint
-        }).pipe(function (body){
+        }).then(function (body){
             var assertion = (/<Assertion(.*)<\/Assertion>/.exec(body) || [])[0];
             if (!assertion) return $.Deferred().reject("Unable to get a token from IDP");
             // get a kidozen token
@@ -356,7 +356,7 @@ var Kido = function (name, marketplace) {
                     wrap_assertion_format : "SAML"
                 }
             };
-            return $.ajax(postRequest).pipe(function (token) {
+            return $.ajax(postRequest).then(function (token) {
                 // make sure we got a token
                 if (!token || !token.access_token)
                     return $.Deferred().reject("Unable to retrieve KidoZen token.");
@@ -1361,19 +1361,46 @@ Kido.prototype.datasources = function ( name ) {
 var KidoLocalStorage = function (kidoApp) {
 
     if (!(this instanceof KidoLocalStorage)) return new KidoLocalStorage(kidoApp);
-    if (!localforage) throw "KidoLocalStorageCollection needs Mozilla LocalForage to be able to work.";
+    if (!localforage) throw "KidoLocalStorage needs Mozilla LocalForage to be able to work.";
 
+    /** LocalForage configuration and helper methods **/
     localforage.config({
         name: 'kidozen',
         storeName: 'kidozen'
     });
 
+    var LOCAL_FORAGE_DELAY = 50;
+
     localforage.setItemAsync = function (key, value) {
         var deferred = $.Deferred();
-        localforage.setItem(key, value).then(function (inserted) {
-            deferred.resolve(inserted);
+        localforage.setItem(key, value).then(function (item) {
+            setTimeout(function () {
+                deferred.resolve(item);
+            }, LOCAL_FORAGE_DELAY);
         }, function () {
             deferred.reject();
+        });
+        return deferred.promise();
+    };
+
+    localforage.getItemAsync = function (key) {
+        var deferred = $.Deferred();
+        localforage.getItem(key).then(function (item) {
+            setTimeout(function () {
+                deferred.resolve(item);
+            }, LOCAL_FORAGE_DELAY);
+        }, function () {
+            deferred.reject();
+        });
+        return deferred.promise();
+    };
+
+    localforage.removeItemAsync = function () {
+        var deferred = $.Deferred();
+        localforage.removeItem(self.name).then(function () {
+            setTimeout(function () {
+                deferred.resolve();
+            }, LOCAL_FORAGE_DELAY);
         });
         return deferred.promise();
     };
@@ -1428,7 +1455,7 @@ var KidoLocalStorage = function (kidoApp) {
      * @api public
      */
     this.getNewIdFromDictionary = function (old_id) {
-        return dictionary.get(old_id, true).pipe(function (item) {
+        return dictionary.get(old_id, true).then(function (item) {
             return item.new_id;
         });
     };
@@ -1441,9 +1468,9 @@ var KidoLocalStorage = function (kidoApp) {
     this.executePendingRequests = function () {
         if (executingPendingTasks) return $.Deferred().reject();
         executingPendingTasks = true;
-        return pending_requests.query().pipe(function (reqs) {
+        return pending_requests.query().then(function (reqs) {
             return self.makeAjaxCall(reqs);
-        }).pipe(function () {
+        }).then(function () {
             executingPendingTasks = false;
             return $.Deferred().resolve();
         }, function (err) {
@@ -1461,9 +1488,9 @@ var KidoLocalStorage = function (kidoApp) {
         if (reqs.length === 0) return $.Deferred().resolve();
         var req = reqs.shift();
         return $.ajax(req.request).then(function (res) {
-            return pending_requests.persist(reqs).pipe(function () {
+            return pending_requests.persist(reqs).then(function () {
                 return self.updateKey(req, res);
-            }).pipe(function () {
+            }).then(function () {
                 return self.makeAjaxCall(reqs);
             });
         });
@@ -1482,12 +1509,12 @@ var KidoLocalStorage = function (kidoApp) {
         var col = self.collection(req.request.kidoService.service + '.' + req.request.kidoService.name),
             old_id = req._id,
             new_id = res._id;
-        return col.get(old_id, true).pipe(function (val) {
+        return col.get(old_id, true).then(function (val) {
             val._id = new_id;
             return col.persist(val);
-        }).pipe(function () {
+        }).then(function () {
             return col.del(old_id);
-        }).pipe(function () {
+        }).then(function () {
             return dictionary.persist({
                 _id: old_id,
                 new_id: new_id
@@ -1529,9 +1556,9 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
      */
     this.insertItem = function (new_val) {
         new_val._id = ($.now() * -1).toString();
-        return self.query().pipe(function (values) {
+        return self.query().then(function (values) {
             values.push(new_val);
-            return self.storeCollection(values).pipe(function () {
+            return self.storeCollection(values).then(function () {
                 return new_val;
             });
         });
@@ -1543,7 +1570,7 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
      * @api private
      */
     this.updateItem = function (new_val) {
-        return self.query().pipe(function (values) {
+        return self.query().then(function (values) {
             if (!values) values = [];
             var val, i;
             for (i = 0; val = values[i]; i++) {
@@ -1556,26 +1583,26 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
             if (values.length !== 0 && values.length === i) {
                 // check if exists in the dictionary and if it does
                 // replace the id with the new one and persist the object
-                return self.localStorage.getNewIdFromDictionary(new_val._id).pipe(function (new_id) {
+                return self.localStorage.getNewIdFromDictionary(new_val._id).then(function (new_id) {
                     new_val._id = new_id;
                     return self.updateItem(new_val);
                 }, function () {
                     values.push(new_val);
-                    return self.storeCollection(values).pipe(function () {
+                    return self.storeCollection(values).then(function () {
                         return new_val;
                     });
                 });
             } else if (values.length === 0) {
                 values.push(new_val);
             }
-            return self.storeCollection(values).pipe(function () {
+            return self.storeCollection(values).then(function () {
                 return new_val;
             });
         });
     };
 
     /**
-     * Persists an object or array in the Local Storage.
+     * Persists an object or array in Local Storage.
      *
      * @param {object} new_val
      * @returns {*}
@@ -1605,7 +1632,7 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
     this.get = function (id, from_dictionary) {
         if (!id) throw "The 'id' argument is required in order to get.";
         if (!from_dictionary) from_dictionary = false;
-        return self.query().pipe(function (values) {
+        return self.query().then(function (values) {
             var val;
             for (var i = 0; val = values[i]; i++) {
                 if (val._id === id) {
@@ -1614,7 +1641,7 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
             }
             if (!from_dictionary) {
                 // if item not found, check if exists in the dictionary and look for it by the new id
-                return self.localStorage.getNewIdFromDictionary(id).pipe(function (new_id) {
+                return self.localStorage.getNewIdFromDictionary(id).then(function (new_id) {
                     return self.get(new_id, true);
                 });
             }
@@ -1624,33 +1651,31 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
 
 
     /**
-     * Executes the query.
+     * Retrieves an array of matching objects from Local Storage.
      *
      * @param {object} [query=]
      * @returns {*}
      * @api public
      */
     this.query = function (query) {
-        var deferred = $.Deferred();
-        localforage.getItem(self.name).then(function (values) {
+        return localforage.getItemAsync(self.name).then(function (values) {
             if (!values) values = [];
             if (typeof query === 'undefined') {
-                deferred.resolve(values);
+                return values;
             } else {
                 for (var q in query) {
                     values = $.map(values, function (val) {
                         return val[q] === query[q] ? val : null;
                     });
                 }
-                deferred.resolve(values);
+                return values;
             }
         });
-        return deferred.promise();
     };
 
 
     /**
-     * Delete an object from Local Storage by its key.
+     * Deletes an object from Local Storage by its key.
      *
      * @param id
      * @returns {*}
@@ -1658,7 +1683,7 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
      */
     this.del = function (id) {
         if (!id) throw "The 'id' argument is required in order to delete.";
-        return self.query().pipe(function (values) {
+        return self.query().then(function (values) {
             values = $.map(values, function (val) {
                 return val._id !== id ? val : null;
             });
@@ -1674,14 +1699,23 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
      * @api public
      */
     this.drop = function () {
-        var deferred = $.Deferred();
-        localforage.removeItem(self.name).then(deferred.resolve);
-        return deferred.promise();
+        return localforage.removeItemAsync();
+    };
+
+    /**
+     * Retrieves the quantity of stored items
+     *
+     * @returns {*}
+     * @api public
+     */
+    this.length = function () {
+        return self.query().then(function (values) {
+            return values.length;
+        });
     };
 };
 
 Kido.prototype.localStorage = function () {
-    // cache the KidoLocalStorage instance
     if (!this._localStorage) this._localStorage = new KidoLocalStorage(this);
     return this._localStorage;
 };
