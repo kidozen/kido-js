@@ -160,20 +160,20 @@ var Kido = function (name, marketplace) {
     // Helper methods
 
     /**
-     * Executes a HTTP request
+     * Executes an HTTP request
      * @param {object} settings
      * @returns {*}
      * @api private
      */
     function executeAjaxRequest (settings) {
-        // TODO: this condition must check if the developer wants to use "caching" when there's no connection
-        if (typeof settings.kidoService === 'undefined') {
+        // Check if caching is not enabled
+        if (typeof settings.kidoService === 'undefined' || !settings.kidoService.caching) {
             return $.ajax(settings);
         }
 
         var data = settings.data,
             service = settings.kidoService.service,
-            name = settings.kidoService.name,
+            name = settings.kidoService.collection,
             objectId = settings.kidoService.objectId,
             query = settings.kidoService.query,
             method = settings.type.toLowerCase(),
@@ -893,15 +893,16 @@ Kido.prototype.sms = function() {
     if (!this._sms) this._sms = new KidoSms(this);
     return this._sms;
 };
-
 /**
- * access to the object storage backend service.
- *
- * You can use this through the storage() helper in Kido ie:
+ * Access to the object storage backend service.
+ * You can use this through the storage() helper in Kido.
  * ie: var tasks = new Kido().storage().objectSet("tasks");
+ *
+ * @param kidoApp
+ * @returns {KidoStorage}
+ * @constructor
  */
-
-var KidoStorage = function ( kidoApp ) {
+var KidoStorage = function (kidoApp) {
 
     var self = this;
 
@@ -914,30 +915,45 @@ var KidoStorage = function ( kidoApp ) {
         return self.app.get(self.rootUrl);
     };
 
-    this.objectSet = function ( name ) {
-        return new KidoObjectSet(name, this);
+    /**
+     * Retrieves an object set with given name.
+     *
+     * @param {string} name
+     * @param {boolean} [caching=false]
+     * @returns {KidoObjectSet}
+     * @api public
+     */
+    this.objectSet = function (name, caching) {
+        return new KidoObjectSet(name, this, caching);
     };
 };
 
-var KidoObjectSet = function ( name, parentStorage ) {
+/**
+ * @param {string} name
+ * @param {KidoStorage} parentStorage
+ * @param {boolean} [caching=false]
+ * @returns {KidoObjectSet}
+ * @constructor
+ */
+var KidoObjectSet = function (name, parentStorage, caching) {
 
     var self = this;
 
-    //validations
-
+    /** Validations **/
     if (!(this instanceof KidoObjectSet)) return new KidoObjectSet(name, parentStorage);
     if (!parentStorage) throw "KidoObjectSet needs a parent KidoStorage object.";
 
-    //propeties
-    this.storage =  parentStorage;
+    /** Public properties **/
+    this.storage = parentStorage;
     this.name = name || 'default';
     this.rootUrl = this.storage.rootUrl + "/" + this.name;
+    this.caching = caching || false;
 
     /**
      * invoke an operation on an object set
      * @api private
      */
-    this.invoke = function ( data ) {
+    this.invoke = function (data) {
 
         if (!data) throw "The storage 'data' argument is required";
         if (!data.settings) throw "The storage 'data.settings' property is required.";
@@ -959,9 +975,10 @@ var KidoObjectSet = function ( name, parentStorage ) {
 
         data.settings.kidoService = {
             service: 'storage',
-            name: self.name,
+            collection: self.name,
             objectId: data.objectId,
-            query: data.query
+            query: data.query,
+            caching: self.caching
         };
 
         return self.storage.app.send(data.settings);
@@ -975,9 +992,9 @@ var KidoObjectSet = function ( name, parentStorage ) {
      *                              user.
      * @api public
      */
-    this.insert = function ( obj, isPrivate ) {
+    this.insert = function (obj, isPrivate) {
 
-        if(!obj) throw "The object set 'obj' argument is requiered in order to insert.";
+        if (!obj) throw "The object set 'obj' argument is requiered in order to insert.";
 
         /**
          * we should not modify the original object to avoid problems on the
@@ -998,7 +1015,7 @@ var KidoObjectSet = function ( name, parentStorage ) {
             isPrivate: isPrivate
         };
 
-        return self.invoke(data).pipe(function ( result ) {
+        return self.invoke(data).pipe(function (result) {
             return $.extend(obj, result);
         });
     };
@@ -1009,9 +1026,9 @@ var KidoObjectSet = function ( name, parentStorage ) {
      * must contains the object's key
      */
 
-    this.update = function ( obj, isPrivate ) {
+    this.update = function (obj, isPrivate) {
 
-        if(!obj) throw "obj argument is requiered.";
+        if (!obj) throw "obj argument is requiered.";
 
         obj = $.extend({}, obj);
 
@@ -1024,24 +1041,22 @@ var KidoObjectSet = function ( name, parentStorage ) {
         };
 
         return self
-                .invoke(data)
-                .pipe(function ( result ) {
-                    return $.extend(obj, result);
-                }, function ( err ) {
+            .invoke(data)
+            .pipe(function (result) {
+                return $.extend(obj, result);
+            }, function (err) {
 
-                    //if there is an error with the sync field for concurrency
-                    //check, add the details to the error object.
-                    if (err.status === 409) {
-                        try
-                        {
-                            err.body = JSON.parse(err.responseText);
-                        }
-                        catch(e)
-                        {
-                        }
+                //if there is an error with the sync field for concurrency
+                //check, add the details to the error object.
+                if (err.status === 409) {
+                    try {
+                        err.body = JSON.parse(err.responseText);
                     }
-                    return err;
-                });
+                    catch (e) {
+                    }
+                }
+                return err;
+            });
     };
 
     /**
@@ -1054,13 +1069,13 @@ var KidoObjectSet = function ( name, parentStorage ) {
      * @api public
      */
 
-    this.save = function ( obj, isPrivate ){
+    this.save = function (obj, isPrivate) {
 
-        if(!obj) throw "obj argument is requiered.";
+        if (!obj) throw "obj argument is requiered.";
 
         obj = $.extend({}, obj);
 
-        if(obj._id && obj._id.length > 0) {
+        if (obj._id && obj._id.length > 0) {
             return self.update(obj, isPrivate);
         }
         else {
@@ -1073,26 +1088,28 @@ var KidoObjectSet = function ( name, parentStorage ) {
      * Retrieves an object by its key
      */
 
-    this.get = function ( objectId ) {
+    this.get = function (objectId) {
 
-        if(!objectId) throw "objectId is required";
+        if (!objectId) throw "objectId is required";
 
         var result = $.Deferred();
 
         self
-            .invoke ({
-                settings: { type: "GET" },
-                objectId: objectId,
-                cache: false
-            })
-            .fail(function ( err ) {
+            .invoke({
+            settings: { type: "GET" },
+            objectId: objectId,
+            cache: false
+        })
+            .fail(function (err) {
                 if (err.status === 404) {
                     result.resolve(null);
                 } else {
                     result.reject(err);
                 }
             })
-            .done(function ( obj ) { result.resolve(obj); });
+            .done(function (obj) {
+                result.resolve(obj);
+            });
 
         return result;
     };
@@ -1102,8 +1119,8 @@ var KidoObjectSet = function ( name, parentStorage ) {
      * Executes the query
      */
 
-    this.query = function ( query, fields, options, cache ) {
-        return self.invoke ({
+    this.query = function (query, fields, options, cache) {
+        return self.invoke({
             settings: { type: "GET" },
             query: query,
             fields: fields,
@@ -1117,8 +1134,8 @@ var KidoObjectSet = function ( name, parentStorage ) {
      * Delete an object from the set by its key
      */
 
-    this.del = function ( objectId ) {
-        return self.invoke ({
+    this.del = function (objectId) {
+        return self.invoke({
             settings: { type: "DELETE", dataType: 'text' },
             objectId: objectId
         });
@@ -1130,12 +1147,17 @@ var KidoObjectSet = function ( name, parentStorage ) {
      */
 
     this.drop = function () {
-        return self.invoke ({
+        return self.invoke({
             settings: { type: "DELETE", dataType: 'text' }
         });
     };
 };
 
+/**
+ * Retrieves an instance of KidoStorage.
+ *
+ * @returns {KidoStorage}
+ */
 Kido.prototype.storage = function () {
     //cache the KidoStorage instance
     if (!this._storage) this._storage = new KidoStorage(this);
@@ -1358,12 +1380,21 @@ Kido.prototype.datasources = function ( name ) {
     return new KidoDatasource(this, name);
 };
 
+/**
+ * Access to the web browser/Cordova storage service.
+ * You can use this through the localStorage() helper in Kido.
+ * ie: var tasks = new Kido().localStorage().collection("tasks");
+ *
+ * @param {Kido} kidoApp
+ * @returns {KidoLocalStorage}
+ * @constructor
+ */
 var KidoLocalStorage = function (kidoApp) {
 
     if (!(this instanceof KidoLocalStorage)) return new KidoLocalStorage(kidoApp);
     if (!localforage) throw "KidoLocalStorage needs Mozilla LocalForage to be able to work.";
 
-    /** LocalForage configuration and helper methods **/
+    /** Local Forage configuration and helper methods **/
     localforage.config({
         name: 'kidozen',
         storeName: 'kidozen'
@@ -1371,6 +1402,13 @@ var KidoLocalStorage = function (kidoApp) {
 
     var LOCAL_FORAGE_DELAY = 50;
 
+    /**
+     * Local Forage setItem method with jQuery deferred interface.
+     *
+     * @param {string} key
+     * @param {object} value
+     * @returns {*}
+     */
     localforage.setItemAsync = function (key, value) {
         var deferred = $.Deferred();
         localforage.setItem(key, value).then(function (item) {
@@ -1383,6 +1421,12 @@ var KidoLocalStorage = function (kidoApp) {
         return deferred.promise();
     };
 
+    /**
+     * Local Forage getItem method with jQuery deferred interface.
+     *
+     * @param {string} key
+     * @returns {*}
+     */
     localforage.getItemAsync = function (key) {
         var deferred = $.Deferred();
         localforage.getItem(key).then(function (item) {
@@ -1395,6 +1439,11 @@ var KidoLocalStorage = function (kidoApp) {
         return deferred.promise();
     };
 
+    /**
+     * Local Forage removeItem method with jQuery deferred interface.
+     *
+     * @returns {*}
+     */
     localforage.removeItemAsync = function () {
         var deferred = $.Deferred();
         localforage.removeItem(self.name).then(function () {
@@ -1416,6 +1465,7 @@ var KidoLocalStorage = function (kidoApp) {
 
     /**
      * Returns a new local storage collection.
+     *
      * @param {string} name
      * @returns {KidoLocalStorageCollection}
      * @api public
@@ -1425,7 +1475,8 @@ var KidoLocalStorage = function (kidoApp) {
     };
 
     /**
-     * Adds a request to the pending queue
+     * Adds a request to the pending queue.
+     *
      * @param {string} object_id
      * @param {object} request
      * @returns {*}
@@ -1439,7 +1490,8 @@ var KidoLocalStorage = function (kidoApp) {
     };
 
     /**
-     * Removes a request from the pending queue
+     * Removes a request from the pending queue.
+     *
      * @param {string} object_id
      * @returns {*}
      * @api public
@@ -1450,6 +1502,7 @@ var KidoLocalStorage = function (kidoApp) {
 
     /**
      * Returns a relation between the old object id and the new one.
+     *
      * @param {string} old_id
      * @returns {*}
      * @api public
@@ -1461,7 +1514,8 @@ var KidoLocalStorage = function (kidoApp) {
     };
 
     /**
-     * Executes the requests stored in the pending requests queue
+     * Executes the requests stored in the pending requests queue.
+     *
      * @returns {*}
      * @api public
      */
@@ -1506,7 +1560,7 @@ var KidoLocalStorage = function (kidoApp) {
         if (typeof res !== 'object' || req._id === res._id) {
             return $.Deferred().resolve();
         }
-        var col = self.collection(req.request.kidoService.service + '.' + req.request.kidoService.name),
+        var col = self.collection(req.request.kidoService.service + '.' + req.request.kidoService.collection),
             old_id = req._id,
             new_id = res._id;
         return col.get(old_id, true).then(function (val) {
@@ -1527,16 +1581,22 @@ var KidoLocalStorage = function (kidoApp) {
 
 };
 
+/**
+ * @param {string} name
+ * @param {KidoLocalStorage} parentLocalStorage
+ * @returns {KidoLocalStorageCollection}
+ * @constructor
+ */
 var KidoLocalStorageCollection = function (name, parentLocalStorage) {
 
     var self = this;
 
-    // validations
+    /** Validations **/
     if (!(this instanceof KidoLocalStorageCollection)) return new KidoLocalStorageCollection(name, parentLocalStorage);
     if (!name) throw "KidoLocalStorageCollection needs a name to be created.";
     if (!parentLocalStorage) throw "KidoLocalStorageCollection needs a parent KidoLocalStorage object.";
 
-    // properties
+    /** Public properties **/
     this.localStorage = parentLocalStorage;
     this.name = 'kido.' + name;
 
@@ -1715,6 +1775,11 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
     };
 };
 
+/**
+ * Retrieves an instance of KidoLocalStorage.
+ *
+ * @returns {KidoLocalStorage}
+ */
 Kido.prototype.localStorage = function () {
     if (!this._localStorage) this._localStorage = new KidoLocalStorage(this);
     return this._localStorage;
