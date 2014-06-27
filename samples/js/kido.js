@@ -28,10 +28,10 @@ var Kido = function (name, marketplace) {
     var _provider = null; // to refresh tokens when they expire.
 
     // initialize properties
-    this.name          = name || 'local';  // backward compatibility
-    this.marketplace   = marketplace;
-    this.local         = this.name === 'local';
-    this.hosted        = !marketplace;
+    this.name = name || 'local';  // backward compatibility
+    this.marketplace = marketplace;
+    this.local = this.name === 'local';
+    this.hosted = !marketplace;
     this.authenticated = this.hosted ? true : false;
 
     // get the application security configuration in case of
@@ -81,7 +81,7 @@ var Kido = function (name, marketplace) {
      * @param {object} settings - settings as in jQuery.ajax settings.
      * @api private.
      */
-    this.send = function ( settings ) {
+    this.send = function (settings) {
         //validate request
         if (!settings.url)
             return $.Deferred().reject({ msg: "Not a valid ajax URL.", error: "Invalid URL"});
@@ -123,7 +123,7 @@ var Kido = function (name, marketplace) {
      * @param settings {object} - optional settings as in $.ajax settings.
      * @api private
      */
-    this.get = function ( url, settings ) {
+    this.get = function (url, settings) {
         settings = $.extend({ url: url, type: "GET"}, settings || {});
         return self.send(settings);
     };
@@ -137,7 +137,7 @@ var Kido = function (name, marketplace) {
      * @param settings {object} - optional settings as in $.ajax. settings.
      * @api private.
      */
-    this.post = function ( url, data, settings ) {
+    this.post = function (url, data, settings) {
         settings = $.extend({
             url: url,
             type: "POST",
@@ -152,7 +152,7 @@ var Kido = function (name, marketplace) {
      * @param settings {object} - optional settings as in $.ajax settings.
      * @api private
      */
-     this.del = function ( url, settings ) {
+    this.del = function (url, settings) {
         settings = $.extend({url: url, type: "DELETE"}, settings || {});
         return self.send(settings);
     };
@@ -165,11 +165,14 @@ var Kido = function (name, marketplace) {
      * @returns {*}
      * @api private
      */
-    function executeAjaxRequest (settings) {
+    function executeAjaxRequest(settings) {
         // Check if caching is not enabled
         if (typeof settings.kidoService === 'undefined' || !settings.kidoService.caching) {
             return $.ajax(settings);
         }
+
+        // Caching is enabled so set a lower timeout
+        settings.timeout = 5000;
 
         var data = settings.data,
             service = settings.kidoService.service,
@@ -183,10 +186,10 @@ var Kido = function (name, marketplace) {
             insert = (method === 'post' && data),
             update = (method === 'put' && data),
             remove = (method === 'delete' && objectId),
-            drop   = (method === 'delete' && !objectId),
+            drop = (method === 'delete' && !objectId),
             object = data ? JSON.parse(data) : null,
             old_id = object ? object._id : null,
-            local  = (objectId && parseInt(objectId) < 0) || (old_id && parseInt(old_id) < 0);
+            local = (objectId && parseInt(objectId) < 0) || (old_id && parseInt(old_id) < 0);
 
         if (local) {
             if (getOne) {
@@ -203,51 +206,59 @@ var Kido = function (name, marketplace) {
             }
         }
 
-        var deferred = $.Deferred();
-        // TODO: see if we can fire an event when the connection is back, and execute the pending requests then
-        collection.localStorage.executePendingRequests().always(function () {
-            var ajax = $.ajax(settings);
-            if (getAll || insert || update) {
-                ajax.then(function (val) {
-                    return collection.persist(val);
-                });
-            } else if (remove) {
-                ajax.then(function () {
-                    return collection.del(objectId ? objectId : old_id);
-                });
-            } else if (drop) {
-                ajax.then(function () {
-                    return collection.drop();
-                });
-            }
-            ajax.fail(function (err) {
-                if (err.status !== 0) return deferred.reject(err);
-                // TODO: check
-                // May be, it'd be better to reject with a custom message and sending the result anyway.
-                // So that, the developer can notify their users that they are working offline.
-                var success = function (val) {
-                    if (insert || update || remove || drop) {
-                        var id = drop ? ($.now() * -1).toString() : (remove ? objectId : (update ? old_id : val._id));
-                        collection.localStorage.addPendingRequest(id, settings).then(function () {
-                            deferred.resolve(val);
-                        });
-                    } else {
-                        deferred.resolve(val);
-                    }
-                };
-                if (getAll) {
-                    collection.query(query).then(success);
-                } else if (getOne) {
-                    collection.get(objectId).then(success);
-                } else if (insert || update) {
-                    collection.persist(data).then(success);
-                } else if (remove) {
-                    collection.del(objectId).then(success);
-                } else if (drop) {
-                    collection.drop().then(success);
-                }
+        var deferred = $.Deferred(),
+            ajax = $.ajax(settings);
+        if (getAll || insert || update) {
+            ajax.then(function (val) {
+                return collection.persist(val);
             });
-            ajax.done(function (val) {
+        } else if (remove) {
+            ajax.then(function () {
+                return collection.del(objectId ? objectId : old_id);
+            });
+        } else if (drop) {
+            ajax.then(function () {
+                return collection.drop();
+            });
+        }
+        ajax.fail(function (err) {
+            if (err.status !== 0) return deferred.reject(err);
+            // May be, it'd be better to reject with a custom message and sending the result anyway.
+            // So that, the developer can notify their users that they are working offline.
+            var success = function (val) {
+                if (insert || update || remove || drop) {
+                    var id = drop ? ($.now() * -1).toString() : (remove ? objectId : (update ? old_id : val._id));
+                    collection.localStorage.addPendingRequest(id, settings).then(function () {
+                        deferred.resolve(val);
+                    });
+                } else {
+                    deferred.resolve(val);
+                }
+            };
+            if (getAll) {
+                collection.query(query).then(success);
+            } else if (getOne) {
+                collection.get(objectId).then(success);
+            } else if (insert || update) {
+                collection.persist(data).then(success);
+            } else if (remove) {
+                collection.del(objectId).then(success);
+            } else if (drop) {
+                collection.drop().then(success);
+            }
+        });
+        ajax.done(function (val) {
+            // TODO: see if we can fire an event when the connection is back, and execute the pending requests immediately
+            collection.localStorage.executePendingRequests().then(function () {
+                if (getAll) {
+                    return collection.query(query);
+                }
+                return val;
+            }).done(function (result) {
+                // All pending requests executed successfully.
+                deferred.resolve(result);
+            }).fail(function () {
+                // There were no pending requests.
                 deferred.resolve(val);
             });
         });
@@ -258,29 +269,29 @@ var Kido = function (name, marketplace) {
      * Ws-Trust strategy for authentication
      * @api private
      */
-    function wsTrustToken (opts) {
+    function wsTrustToken(opts) {
         var template = '<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:a="http://www.w3.org/2005/08/addressing" xmlns:u="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"><s:Header><a:Action s:mustUnderstand="1">http://docs.oasis-open.org/ws-sx/ws-trust/200512/RST/Issue</a:Action><a:To s:mustUnderstand="1">[To]</a:To><o:Security s:mustUnderstand="1" xmlns:o="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><o:UsernameToken u:Id="uuid-6a13a244-dac6-42c1-84c5-cbb345b0c4c4-1"><o:Username>[Username]</o:Username><o:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">[Password]</o:Password></o:UsernameToken></o:Security></s:Header><s:Body><trust:RequestSecurityToken xmlns:trust="http://docs.oasis-open.org/ws-sx/ws-trust/200512"><wsp:AppliesTo xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy"><a:EndpointReference><a:Address>[ApplyTo]</a:Address></a:EndpointReference></wsp:AppliesTo><trust:KeyType>http://docs.oasis-open.org/ws-sx/ws-trust/200512/Bearer</trust:KeyType><trust:RequestType>http://docs.oasis-open.org/ws-sx/ws-trust/200512/Issue</trust:RequestType><trust:TokenType>urn:oasis:names:tc:SAML:2.0:assertion</trust:TokenType></trust:RequestSecurityToken></s:Body></s:Envelope>';
         return $.ajax({
-                    dataType: 'text',
-                    crossDomain: true,
-                    url: opts.endpoint,
-                    type: 'POST',
-                    data: template
-                        .replace("[To]", opts.endpoint)
-                        .replace("[Username]", opts.user)
-                        .replace("[Password]", opts.pass)
-                        .replace("[ApplyTo]", opts.scope),
-                    headers: {
-                        'Content-Type': 'application/soap+xml; charset=utf-8'
-                    }
-                });
+            dataType: 'text',
+            crossDomain: true,
+            url: opts.endpoint,
+            type: 'POST',
+            data: template
+                .replace("[To]", opts.endpoint)
+                .replace("[Username]", opts.user)
+                .replace("[Password]", opts.pass)
+                .replace("[ApplyTo]", opts.scope),
+            headers: {
+                'Content-Type': 'application/soap+xml; charset=utf-8'
+            }
+        });
     }
 
     /**
      * wrapv0.9 strategy for authentication
      * @api private
      */
-    function wrapToken (opts) {
+    function wrapToken(opts) {
         var form = {
             "wrap_name": opts.user,
             "wrap_password": opts.pass,
@@ -298,7 +309,7 @@ var Kido = function (name, marketplace) {
      * InAppBrowser authentication
      * @api private
      */
-    function passiveAuth (config) {
+    function passiveAuth(config) {
         if (!config.signInUrl) {
             return $.Deferred().reject('Passive Authentication not supported.');
         }
@@ -307,7 +318,7 @@ var Kido = function (name, marketplace) {
         }
         var deferred = $.Deferred();
         var ref = window.open(config.signInUrl, '_blank', 'location=yes');
-        ref.addEventListener('loadstop' , function (event) {
+        ref.addEventListener('loadstop', function (event) {
             ref.executeScript({
                 code: 'document.title;'
             }, function (values) {
@@ -329,7 +340,7 @@ var Kido = function (name, marketplace) {
      * Form based authentication
      * @api private
      */
-    function activeAuth (config, user, pass, prov, ip) {
+    function activeAuth(config, user, pass, prov, ip) {
         var getToken;
         if (ip.protocol.toLowerCase() === "wrapv0.9")
             getToken = wrapToken;
@@ -343,17 +354,17 @@ var Kido = function (name, marketplace) {
             pass: pass,
             scope: config.authServiceScope,
             endpoint: ip.endpoint
-        }).then(function (body){
+        }).then(function (body) {
             var assertion = (/<Assertion(.*)<\/Assertion>/.exec(body) || [])[0];
             if (!assertion) return $.Deferred().reject("Unable to get a token from IDP");
             // get a kidozen token
             var postRequest = {
-                url : config.authServiceEndpoint,
-                type : "POST",
-                data : {
-                    wrap_assertion : assertion,
-                    wrap_scope : config.applicationScope,
-                    wrap_assertion_format : "SAML"
+                url: config.authServiceEndpoint,
+                type: "POST",
+                data: {
+                    wrap_assertion: assertion,
+                    wrap_scope: config.applicationScope,
+                    wrap_assertion_format: "SAML"
                 }
             };
             return $.ajax(postRequest).then(function (token) {
@@ -373,7 +384,7 @@ var Kido = function (name, marketplace) {
      * Process the token and modifies expiration time
      * @api private
      */
-    function processToken (token) {
+    function processToken(token) {
         token.token = 'WRAP access_token="' + token.access_token + '"';
         // parse the token and get the claims and the expiration date.
         var tokenData = decodeURIComponent(token.access_token);
@@ -384,7 +395,7 @@ var Kido = function (name, marketplace) {
             if (c.indexOf("ExpiresOn") > -1) {
                 // adjust the expiration 20 seconds before it actually
                 // expires so that it doesn't expire due to latency.
-                token.expiresOn = ~~(c.split("=")[1]) * 1000 - 20*1000;
+                token.expiresOn = ~~(c.split("=")[1]) * 1000 - 20 * 1000;
                 break;
             }
         }
@@ -1501,6 +1512,18 @@ var KidoLocalStorage = function (kidoApp) {
     };
 
     /**
+     * Retrieves the request data by its key.
+     *
+     * @param {string} object_id
+     * @returns {*}
+     */
+    this.getPendingRequestObject = function (object_id) {
+        return pending_requests.get(object_id, true).then(function (req) {
+            return JSON.parse(req.request.data);
+        });
+    };
+
+    /**
      * Returns a relation between the old object id and the new one.
      *
      * @param {string} old_id
@@ -1523,13 +1546,17 @@ var KidoLocalStorage = function (kidoApp) {
         if (executingPendingTasks) return $.Deferred().reject();
         executingPendingTasks = true;
         return pending_requests.query().then(function (reqs) {
+            if (reqs.length === 0) {
+                executingPendingTasks = false;
+                return $.Deferred().reject();
+            }
             return self.makeAjaxCall(reqs);
         }).then(function () {
             executingPendingTasks = false;
             return $.Deferred().resolve();
-        }, function (err) {
+        }, function () {
             executingPendingTasks = false;
-            return $.Deferred().reject(err);
+            return $.Deferred().reject();
         });
     };
 
@@ -1542,8 +1569,8 @@ var KidoLocalStorage = function (kidoApp) {
         if (reqs.length === 0) return $.Deferred().resolve();
         var req = reqs.shift();
         return $.ajax(req.request).then(function (res) {
-            return pending_requests.persist(reqs).then(function () {
-                return self.updateKey(req, res);
+            return self.persistChange(req, res).then(function () {
+                return pending_requests.persist(reqs);
             }).then(function () {
                 return self.makeAjaxCall(reqs);
             });
@@ -1556,7 +1583,7 @@ var KidoLocalStorage = function (kidoApp) {
      * @returns {*}
      * @api private
      */
-    this.updateKey = function (req, res) {
+    this.persistChange = function (req, res) {
         if (typeof res !== 'object' || req._id === res._id) {
             return $.Deferred().resolve();
         }
@@ -1566,6 +1593,12 @@ var KidoLocalStorage = function (kidoApp) {
         return col.get(old_id, true).then(function (val) {
             val._id = new_id;
             return col.persist(val);
+        }, function () {
+            // Item not found
+            return self.getPendingRequestObject(old_id).then(function (object) {
+                object._id = new_id;
+                return col.persist(object);
+            });
         }).then(function () {
             return col.del(old_id);
         }).then(function () {
@@ -1574,7 +1607,6 @@ var KidoLocalStorage = function (kidoApp) {
                 new_id: new_id
             });
         }, function () {
-            // Item not found
             return $.Deferred().resolve();
         });
     };
