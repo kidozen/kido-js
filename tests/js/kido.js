@@ -171,9 +171,6 @@ var Kido = function (name, marketplace) {
             return $.ajax(settings);
         }
 
-        // Caching is enabled so set a lower timeout
-        settings.timeout = 5000;
-
         var data = settings.data,
             service = settings.kidoService.service,
             name = settings.kidoService.collection,
@@ -190,6 +187,11 @@ var Kido = function (name, marketplace) {
             object = data ? JSON.parse(data) : null,
             old_id = object ? object._id : null,
             local = (objectId && parseInt(objectId) < 0) || (old_id && parseInt(old_id) < 0);
+
+        if (getOne || getAll) {
+            // Caching is enabled so set a lower timeout
+            settings.timeout = 5000;
+        }
 
         if (local) {
             if (getOne) {
@@ -326,7 +328,8 @@ var Kido = function (name, marketplace) {
                 if (refTitle.indexOf('Success payload=') !== -1) {
                     ref.close();
                     var token = JSON.parse(window.atob(refTitle.replace('Success payload=', '')));
-                    if (!token || !token.access_token) {
+                    // rawToken is verified for backwards compatibility
+                    if (!token || (!token.access_token && !token.rawToken)) {
                         return deferred.reject('Unable to retrieve KidoZen token.');
                     }
                     deferred.resolve(processToken(token));
@@ -369,8 +372,10 @@ var Kido = function (name, marketplace) {
             };
             return $.ajax(postRequest).then(function (token) {
                 // make sure we got a token
-                if (!token || !token.access_token)
+                // rawToken is verified for backwards compatibility
+                if (!token || (!token.access_token && !token.rawToken)) {
                     return $.Deferred().reject("Unable to retrieve KidoZen token.");
+                }
                 self.authenticated = true;
                 _username = user;
                 _password = pass;
@@ -385,9 +390,11 @@ var Kido = function (name, marketplace) {
      * @api private
      */
     function processToken(token) {
-        token.token = 'WRAP access_token="' + token.access_token + '"';
+        // rawToken is verified for backwards compatibility
+        var access_token = token.access_token ? token.access_token : token.rawToken;
+        token.token = 'WRAP access_token="' + access_token + '"';
         // parse the token and get the claims and the expiration date.
-        var tokenData = decodeURIComponent(token.access_token);
+        var tokenData = decodeURIComponent(access_token);
         var claims = tokenData.split("&");
         token.claims = claims;
         for (var i in claims) {
