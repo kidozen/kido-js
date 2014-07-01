@@ -1320,45 +1320,48 @@ Kido.prototype.services = function ( name ) {
 };
 
 /**
- * access to the Datasources backend service.
+ * Access to the Datasources backend service.
  *
- * @param kidoApp {object} - instance of the Kido class.
+ * @param kidoApp {Kido}
+ * @param name {string}
+ * @param [caching=false] {boolean}
+ * @returns {KidoDatasource}
+ * @constructor
  */
-
-var KidoDatasource = function ( kidoApp, name ) {
+var KidoDatasource = function (kidoApp, name, caching) {
 
     var self = this;
 
-    if (!(this instanceof KidoDatasource)) return new KidoDatasource(kidoApp);
+    if (!(this instanceof KidoDatasource)) return new KidoDatasource(kidoApp, name);
     if (!kidoApp) throw "The 'kidoApp' argument is required by the KidoDatasource class.";
+    if (!name) throw "The 'name' argument is required by the KidoDatasource class.";
 
     /** variables **/
 
     this.app = kidoApp;
     this.name = name;
     this._defaults = {};
-
+    this.caching = caching || false;
 
     /** methods **/
 
-    this.defaults = function ( opts ) {
+    this.defaults = function (opts) {
         self._defaults = $.extend(self._defaults, opts || {});
         return self;
     };
 
-    this.query = function ( opts, timeout ) {
-        // $.isNumeric requires jQuery 1.7+
-        if (!timeout && $.isNumeric(opts)){
+    this.query = function (opts, timeout) {
+        if (!timeout && $.isNumeric(opts)) {
             timeout = opts;
             opts = null;
         }
         var result = $.Deferred();
         var args = $.extend({}, self._defaults, opts);
-        var qs = Object.keys(args).length > 0 ? "?"+ $.param(args) : "";
+        var qs = Object.keys(args).length > 0 ? "?" + $.param(args) : "";
         var settings = timeout ? { headers: { "timeout": timeout } } : {};
         self.app
             .get("/api/v2/datasources/" + self.name + qs, settings)
-            .done(function ( res ) {
+            .done(function (res) {
                 if (res.error) {
                     return result.reject(res.error);
                 }
@@ -1370,9 +1373,9 @@ var KidoDatasource = function ( kidoApp, name ) {
         return result;
     };
 
-    this.invoke = function ( opts, timeout ) {
+    this.invoke = function (opts, timeout) {
         // $.isNumeric requires jQuery 1.7+
-        if (!timeout && $.isNumeric(opts)){
+        if (!timeout && $.isNumeric(opts)) {
             timeout = opts;
             opts = null;
         }
@@ -1381,7 +1384,7 @@ var KidoDatasource = function ( kidoApp, name ) {
         var settings = timeout ? { headers: { "timeout": timeout } } : {};
         self.app
             .post("/api/v2/datasources/" + self.name, args, settings)
-            .done(function ( res ) {
+            .done(function (res) {
                 if (res.error) {
                     return result.reject(res.error);
                 }
@@ -1394,8 +1397,15 @@ var KidoDatasource = function ( kidoApp, name ) {
     };
 };
 
-Kido.prototype.datasources = function ( name ) {
-    return new KidoDatasource(this, name);
+/**
+ * Retrieves an instance of KidoDatasource.
+ *
+ * @param name {string}
+ * @param [caching=false] {boolean}
+ * @returns {KidoDatasource}
+ */
+Kido.prototype.datasources = function (name, caching) {
+    return new KidoDatasource(this, name, caching);
 };
 
 /**
