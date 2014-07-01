@@ -170,101 +170,7 @@ var Kido = function (name, marketplace) {
         if (typeof settings.kidoService === 'undefined' || !settings.kidoService.caching) {
             return $.ajax(settings);
         }
-
-        var data = settings.data,
-            service = settings.kidoService.service,
-            name = settings.kidoService.collection,
-            objectId = settings.kidoService.objectId,
-            query = settings.kidoService.query,
-            method = settings.type.toLowerCase(),
-            collection = self.localStorage().collection(service + '.' + name),
-            getOne = (method === 'get' && objectId),
-            getAll = (method === 'get' && !objectId),
-            insert = (method === 'post' && data),
-            update = (method === 'put' && data),
-            remove = (method === 'delete' && objectId),
-            drop = (method === 'delete' && !objectId),
-            object = data ? JSON.parse(data) : null,
-            old_id = object ? object._id : null,
-            local = (objectId && parseInt(objectId) < 0) || (old_id && parseInt(old_id) < 0);
-
-        if (getOne || getAll) {
-            // Caching is enabled so set a lower timeout
-            settings.timeout = 5000;
-        }
-
-        if (local) {
-            if (getOne) {
-                return collection.get(objectId);
-            } else if (remove) {
-                return collection.del(objectId).then(function () {
-                    return collection.localStorage.removePendingRequest(objectId);
-                });
-            } else if (update) {
-                settings.type = 'POST';
-                delete object._id;
-                settings.data = JSON.stringify(object);
-                objectId = null;
-            }
-        }
-
-        var deferred = $.Deferred(),
-            ajax = $.ajax(settings);
-        if (getAll || insert || update) {
-            ajax.then(function (val) {
-                return collection.persist(val);
-            });
-        } else if (remove) {
-            ajax.then(function () {
-                return collection.del(objectId ? objectId : old_id);
-            });
-        } else if (drop) {
-            ajax.then(function () {
-                return collection.drop();
-            });
-        }
-        ajax.fail(function (err) {
-            if (err.status !== 0) return deferred.reject(err);
-            // May be, it'd be better to reject with a custom message and sending the result anyway.
-            // So that, the developer can notify their users that they are working offline.
-            var success = function (val) {
-                if (insert || update || remove || drop) {
-                    var id = drop ? ($.now() * -1).toString() : (remove ? objectId : (update ? old_id : val._id));
-                    collection.localStorage.addPendingRequest(id, settings).then(function () {
-                        deferred.resolve(val);
-                    });
-                } else {
-                    deferred.resolve(val);
-                }
-            };
-            if (getAll) {
-                collection.query(query).then(success);
-            } else if (getOne) {
-                collection.get(objectId).then(success);
-            } else if (insert || update) {
-                collection.persist(data).then(success);
-            } else if (remove) {
-                collection.del(objectId).then(success);
-            } else if (drop) {
-                collection.drop().then(success);
-            }
-        });
-        ajax.done(function (val) {
-            // TODO: see if we can fire an event when the connection is back, and execute the pending requests immediately
-            collection.localStorage.executePendingRequests().then(function () {
-                if (getAll) {
-                    return collection.query(query);
-                }
-                return val;
-            }).done(function (result) {
-                // All pending requests executed successfully.
-                deferred.resolve(result);
-            }).fail(function () {
-                // There were no pending requests.
-                deferred.resolve(val);
-            });
-        });
-        return deferred.promise();
+        return self.offline().ajax(settings);
     }
 
     /**
@@ -1422,6 +1328,16 @@ var KidoLocalStorage = function (kidoApp) {
     if (!(this instanceof KidoLocalStorage)) return new KidoLocalStorage(kidoApp);
     if (!localforage) throw "KidoLocalStorage needs Mozilla LocalForage to be able to work.";
 
+    /**
+     * @type {Kido}
+     */
+    this.app = kidoApp;
+
+    /**
+     * @type {KidoLocalStorage}
+     */
+    var self = this;
+
     /** Local Forage configuration and helper methods **/
     localforage.config({
         name: 'kidozen',
@@ -1470,26 +1386,18 @@ var KidoLocalStorage = function (kidoApp) {
     /**
      * Local Forage removeItem method with jQuery deferred interface.
      *
+     * @param {string} key
      * @returns {*}
      */
-    localforage.removeItemAsync = function () {
+    localforage.removeItemAsync = function (key) {
         var deferred = $.Deferred();
-        localforage.removeItem(self.name).then(function () {
+        localforage.removeItem(key).then(function () {
             setTimeout(function () {
                 deferred.resolve();
             }, LOCAL_FORAGE_DELAY);
         });
         return deferred.promise();
     };
-
-    /** Private properties **/
-    var self = this,
-        executingPendingTasks = false,
-        dictionary = new KidoLocalStorageCollection('id_dictionary', this),
-        pending_requests = new KidoLocalStorageCollection('pending_requests', this);
-
-    /** Public properties **/
-    this.app = kidoApp;
 
     /**
      * Returns a new local storage collection.
@@ -1502,139 +1410,6 @@ var KidoLocalStorage = function (kidoApp) {
         return new KidoLocalStorageCollection(name, this);
     };
 
-    /**
-     * Adds a request to the pending queue.
-     *
-     * @param {string} object_id
-     * @param {object} request
-     * @returns {*}
-     * @api public
-     */
-    this.addPendingRequest = function (object_id, request) {
-        return pending_requests.persist({
-            _id: object_id,
-            request: request
-        });
-    };
-
-    /**
-     * Removes a request from the pending queue.
-     *
-     * @param {string} object_id
-     * @returns {*}
-     * @api public
-     */
-    this.removePendingRequest = function (object_id) {
-        return pending_requests.del(object_id);
-    };
-
-    /**
-     * Retrieves the request data by its key.
-     *
-     * @param {string} object_id
-     * @returns {*}
-     */
-    this.getPendingRequestObject = function (object_id) {
-        return pending_requests.get(object_id, true).then(function (req) {
-            return JSON.parse(req.request.data);
-        });
-    };
-
-    /**
-     * Executes the requests stored in the pending requests queue.
-     *
-     * @returns {*}
-     * @api public
-     */
-    this.executePendingRequests = function () {
-        if (executingPendingTasks) return $.Deferred().reject();
-        executingPendingTasks = true;
-        return pending_requests.query().then(function (reqs) {
-            if (reqs.length === 0) {
-                executingPendingTasks = false;
-                return $.Deferred().reject();
-            }
-            return self.makeAjaxCall(reqs);
-        }).then(function () {
-            executingPendingTasks = false;
-            return $.Deferred().resolve();
-        }, function () {
-            executingPendingTasks = false;
-            return $.Deferred().reject();
-        });
-    };
-
-    /**
-     * @param {object[]} reqs
-     * @returns {*}
-     * @api private
-     */
-    this.makeAjaxCall = function (reqs) {
-        if (reqs.length === 0) return $.Deferred().resolve();
-        var req = reqs.shift();
-        return $.ajax(req.request).then(function (res) {
-            return self.persistChange(req, res).then(function () {
-                return pending_requests.persist(reqs);
-            }).then(function () {
-                return self.makeAjaxCall(reqs);
-            });
-        });
-    };
-
-    /**
-     * @param {object} req
-     * @param {object} res
-     * @returns {*}
-     * @api private
-     */
-    this.persistChange = function (req, res) {
-        var col = self.collection(req.request.kidoService.service + '.' + req.request.kidoService.collection),
-            old_id = req._id,
-            new_id = typeof res === 'object' ? res._id : null;
-        if (!new_id) {
-            // Item was deleted
-            return col.del(old_id).then(function () {
-                return dictionary.del(old_id);
-            });
-        }
-        return col.get(old_id, true).then(function (val) {
-            // Item found
-            val._id = new_id;
-            return col.persist(val);
-        }, function () {
-            // Item not found
-            return self.getPendingRequestObject(old_id).then(function (object) {
-                object._id = new_id;
-                return col.persist(object);
-            });
-        }).then(function () {
-            if (old_id !== new_id) {
-                return col.del(old_id).then(function () {
-                    return dictionary.persist({
-                        _id: old_id,
-                        new_id: new_id
-                    });
-                });
-            }
-            return $.Deferred().resolve();
-        }, function () {
-            return $.Deferred().resolve();
-        });
-    };
-
-    /**
-     * Returns a relation between the old object id and the new one.
-     *
-     * @param {string} old_id
-     * @returns {*}
-     * @api public
-     */
-    this.getNewIdFromDictionary = function (old_id) {
-        return dictionary.get(old_id, true).then(function (item) {
-            return item.new_id;
-        });
-    };
-
 };
 
 /**
@@ -1645,6 +1420,9 @@ var KidoLocalStorage = function (kidoApp) {
  */
 var KidoLocalStorageCollection = function (name, parentLocalStorage) {
 
+    /**
+     * @type {KidoLocalStorageCollection}
+     */
     var self = this;
 
     /** Validations **/
@@ -1652,8 +1430,13 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
     if (!name) throw "KidoLocalStorageCollection needs a name to be created.";
     if (!parentLocalStorage) throw "KidoLocalStorageCollection needs a parent KidoLocalStorage object.";
 
-    /** Public properties **/
+    /**
+     * @type {KidoLocalStorage}
+     */
     this.localStorage = parentLocalStorage;
+    /**
+     * @type {string}
+     */
     this.name = 'kido.' + name;
 
     /**
@@ -1699,7 +1482,7 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
             if (values.length !== 0 && values.length === i) {
                 // check if exists in the dictionary and if it does
                 // replace the id with the new one and persist the object
-                return self.localStorage.getNewIdFromDictionary(new_val._id).then(function (new_id) {
+                return self.localStorage.app.offline().getNewIdFromDictionary(new_val._id).then(function (new_id) {
                     new_val._id = new_id;
                     return self.updateItem(new_val);
                 }, function () {
@@ -1757,7 +1540,7 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
             }
             if (!from_dictionary) {
                 // if item not found, check if exists in the dictionary and look for it by the new id
-                return self.localStorage.getNewIdFromDictionary(id).then(function (new_id) {
+                return self.localStorage.app.offline().getNewIdFromDictionary(id).then(function (new_id) {
                     return self.get(new_id, true);
                 });
             }
@@ -1815,7 +1598,7 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
      * @api public
      */
     this.drop = function () {
-        return localforage.removeItemAsync();
+        return localforage.removeItemAsync(self.name);
     };
 
     /**
@@ -1840,3 +1623,363 @@ Kido.prototype.localStorage = function () {
     if (!this._localStorage) this._localStorage = new KidoLocalStorage(this);
     return this._localStorage;
 };
+
+/**
+ * Access to the Kido offline capabilities.
+ * You can use this through the offline() helper in Kido.
+ * ie: var offline = new Kido().offline();
+ *
+ * @param {Kido} kidoApp
+ * @returns {KidoOffline}
+ * @constructor
+ */
+var KidoOffline = function (kidoApp) {
+
+    if (!(this instanceof KidoOffline)) return new KidoOffline(kidoApp);
+
+    /**
+     * @type {Kido}
+     */
+    this.app = kidoApp;
+
+    /**
+     * @type {KidoOffline}
+     */
+    var self = this,
+        /**
+         * @type {Worker}
+         */
+        worker = null,
+        /**
+         * @type {boolean}
+         */
+        executingPendingTasks = false,
+        /**
+         * @type {KidoLocalStorageCollection}
+         */
+        dictionary = self.app.localStorage().collection('id_dictionary', this),
+        /**
+         * @type {KidoLocalStorageCollection}
+         */
+        pending_requests = self.app.localStorage().collection('pending_requests', this);
+
+    /**
+     * Starts web worker which checks if there is internet connection.
+     *
+     * @api private
+     */
+    this.startCheckingConnectivity = function () {
+        // TODO: make work with in-line Blob and add fallback for browsers that do not support Web Workers.
+        if (!worker) {
+            var URL = window.URL || window.webkitURL;
+            var Blob = window.Blob;
+            var Worker = window.Worker;
+
+            if (!URL || !Blob || !Worker) {
+                return console.log('Unable to create web worker');
+            }
+
+            var blob = new Blob(['var checkConnectivityInterval;self.addEventListener("message",function(e){switch(e.data){case"start":self.start();break;case"stop":self.stop()}},!1),self.stop=function(){self.postMessage("stopped"),clearInterval(checkConnectivityInterval),self.close()},self.start=function(){checkConnectivityInterval=setInterval(function(){self.doesConnectionExist()},5e3)},self.doesConnectionExist=function(){self.postMessage("checking connection...");var e=new XMLHttpRequest,s="/favicon.ico",t=Math.round(1e4*Math.random());e.open("HEAD",s+"?rand="+t,!1);try{e.send(),0!==e.status&&(self.postMessage("connection is up!"),self.postMessage("up"))}catch(n){return self.postMessage("connection is down!"),!1}};']);
+            worker = new Worker(URL.createObjectURL(blob));
+            worker.addEventListener('message', function (event) {
+                switch (event.data) {
+                    case 'up':
+                        self.executePendingRequests();
+                        worker.postMessage('stop');
+                        console.log('stopping worker...');
+                        break;
+                    case 'stopped':
+                        worker = null;
+                        console.log('worker stopped!');
+                        break;
+                    default:
+                        console.log(event.data);
+                }
+            });
+            worker.postMessage('start');
+        }
+    };
+
+    /**
+     * Adds a request to the pending queue.
+     *
+     * @param {string} object_id
+     * @param {object} request
+     * @returns {*}
+     * @api private
+     */
+    this.addPendingRequest = function (object_id, request) {
+        self.startCheckingConnectivity();
+        return pending_requests.persist({
+            _id: object_id,
+            request: request
+        });
+    };
+
+    /**
+     * Removes a request from the pending queue.
+     *
+     * @param {string} object_id
+     * @returns {*}
+     * @api private
+     */
+    this.removePendingRequest = function (object_id) {
+        return pending_requests.del(object_id);
+    };
+
+    /**
+     * Retrieves the request data by its key.
+     *
+     * @param {string} object_id
+     * @returns {*}
+     * @api private
+     */
+    this.getPendingRequestObject = function (object_id) {
+        return pending_requests.get(object_id, true).then(function (req) {
+            return JSON.parse(req.request.data);
+        });
+    };
+
+    /**
+     * Executes the requests stored in the pending requests queue.
+     *
+     * @returns {*}
+     * @api private
+     */
+    this.executePendingRequests = function () {
+        if (executingPendingTasks) return $.Deferred().reject();
+        executingPendingTasks = true;
+        return pending_requests.query().then(function (reqs) {
+            if (reqs.length === 0) {
+                executingPendingTasks = false;
+                return $.Deferred().reject();
+            }
+            return self.makeAjaxCall(reqs);
+        }).then(function () {
+            executingPendingTasks = false;
+            return $.Deferred().resolve();
+        }, function () {
+            executingPendingTasks = false;
+            return $.Deferred().reject();
+        });
+    };
+
+    /**
+     * @param {object[]} reqs
+     * @returns {*}
+     * @api private
+     */
+    this.makeAjaxCall = function (reqs) {
+        if (reqs.length === 0) return $.Deferred().resolve();
+        var req = reqs.shift();
+        return $.ajax(req.request).then(function (res) {
+            return self.persistChange(req, res).then(function () {
+                return pending_requests.persist(reqs);
+            }).then(function () {
+                return self.makeAjaxCall(reqs);
+            });
+        });
+    };
+
+    /**
+     * @param {object} req
+     * @param {object} res
+     * @returns {*}
+     * @api private
+     */
+    this.persistChange = function (req, res) {
+        var col = self.app.localStorage().collection(req.request.kidoService.service + '.' + req.request.kidoService.collection),
+            old_id = req._id,
+            new_id = typeof res === 'object' ? res._id : null;
+        if (!new_id) {
+            // Item was deleted
+            return col.del(old_id).then(function () {
+                return dictionary.del(old_id);
+            });
+        }
+        return col.get(old_id, true).then(function (val) {
+            // Item found
+            val._id = new_id;
+            return col.persist(val);
+        }, function () {
+            // Item not found
+            return self.getPendingRequestObject(old_id).then(function (object) {
+                object._id = new_id;
+                return col.persist(object);
+            });
+        }).then(function () {
+            if (old_id !== new_id) {
+                return col.del(old_id).then(function () {
+                    return dictionary.persist({
+                        _id: old_id,
+                        new_id: new_id
+                    });
+                });
+            }
+            return $.Deferred().resolve();
+        }, function () {
+            return $.Deferred().resolve();
+        });
+    };
+
+    /**
+     * Returns a relation between the old object id and the new one.
+     *
+     * @param {string} old_id
+     * @returns {*}
+     * @api public
+     */
+    this.getNewIdFromDictionary = function (old_id) {
+        return dictionary.get(old_id, true).then(function (item) {
+            return item.new_id;
+        });
+    };
+
+    /**
+     * Executes ajax requests or stores it in a queue if it fails
+     *
+     * @param {object} settings
+     * @returns {*}
+     * @api public
+     */
+    this.ajax = function (settings) {
+        var data = settings.data,
+            service = settings.kidoService.service,
+            name = settings.kidoService.collection,
+            objectId = settings.kidoService.objectId,
+            query = settings.kidoService.query,
+            method = settings.type.toLowerCase(),
+            collection = self.app.localStorage().collection(service + '.' + name),
+            getOne = (method === 'get' && objectId),
+            getAll = (method === 'get' && !objectId),
+            insert = (method === 'post' && data),
+            update = (method === 'put' && data),
+            remove = (method === 'delete' && objectId),
+            drop = (method === 'delete' && !objectId),
+            object = data ? JSON.parse(data) : null,
+            old_id = object ? object._id : null,
+            local = (objectId && parseInt(objectId) < 0) || (old_id && parseInt(old_id) < 0);
+
+        if (getOne || getAll) {
+            // Caching is enabled so set a lower timeout
+            settings.timeout = 5000;
+        }
+
+        if (local) {
+            if (getOne) {
+                return collection.get(objectId);
+            } else if (remove) {
+                return collection.del(objectId).then(function () {
+                    return self.removePendingRequest(objectId);
+                });
+            } else if (update) {
+                settings.type = 'POST';
+                delete object._id;
+                settings.data = JSON.stringify(object);
+                objectId = null;
+            }
+        }
+
+        var deferred = $.Deferred(),
+            ajax = $.ajax(settings);
+        if (getAll || insert || update) {
+            ajax.then(function (val) {
+                return collection.persist(val);
+            });
+        } else if (remove) {
+            ajax.then(function () {
+                return collection.del(objectId ? objectId : old_id);
+            });
+        } else if (drop) {
+            ajax.then(function () {
+                return collection.drop();
+            });
+        }
+        ajax.fail(function (err) {
+            if (err.status !== 0) return deferred.reject(err);
+            // May be, it'd be better to reject with a custom message and sending the result anyway.
+            // So that, the developer can notify their users that they are working offline.
+            var success = function (val) {
+                if (insert || update || remove || drop) {
+                    var id = drop ? ($.now() * -1).toString() : (remove ? objectId : (update ? old_id : val._id));
+                    self.addPendingRequest(id, settings).then(function () {
+                        deferred.resolve(val);
+                    });
+                } else {
+                    deferred.resolve(val);
+                }
+            };
+            if (getAll) {
+                collection.query(query).then(success);
+            } else if (getOne) {
+                collection.get(objectId).then(success);
+            } else if (insert || update) {
+                collection.persist(data).then(success);
+            } else if (remove) {
+                collection.del(objectId).then(success);
+            } else if (drop) {
+                collection.drop().then(success);
+            }
+        });
+        ajax.done(function (val) {
+            deferred.resolve(val);
+        });
+        return deferred.promise();
+    };
+
+};
+
+/**
+ * Retrieves an instance of KidoOffline.
+ *
+ * @returns {KidoOffline}
+ */
+Kido.prototype.offline = function () {
+    if (!this._offline) this._offline = new KidoOffline(this);
+    return this._offline;
+};
+
+/** Web Worker **/
+/*
+var checkConnectivityInterval;
+
+self.addEventListener("message", function (event) {
+    switch (event.data) {
+        case "start":
+            self.start();
+            break;
+        case "stop":
+            self.stop();
+            break;
+    }
+}, false);
+
+self.stop = function () {
+    self.postMessage("stopped");
+    clearInterval(checkConnectivityInterval);
+    self.close();
+};
+
+self.start = function () {
+    checkConnectivityInterval = setInterval(function () {
+        self.doesConnectionExist();
+    }, 5000);
+};
+
+self.doesConnectionExist = function () {
+    self.postMessage("checking connection...");
+    var xhr = new XMLHttpRequest();
+    var file = "/favicon.ico";
+    var randomNum = Math.round(Math.random() * 10000);
+    xhr.open("HEAD", file + "?rand=" + randomNum, false);
+    try {
+        xhr.send();
+        if (xhr.status !== 0) {
+            self.postMessage("connection is up!");
+            self.postMessage("up");
+        }
+    } catch (e) {
+        self.postMessage("connection is down!");
+        return false;
+    }
+};*/
