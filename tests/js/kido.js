@@ -1669,7 +1669,8 @@ var KidoOffline = function (kidoApp) {
      * @api private
      */
     this.startCheckingConnectivity = function () {
-        var URL_TO_CHECK = 'http://localhost:3000/favicon.ico',
+        // TODO: change URL for something of our own hosted in a CDN
+        var URL_TO_CHECK = 'http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js',
             DELAY_TO_CHECK = 5000;
         if (!worker) {
             var URL = window.URL || window.webkitURL;
