@@ -18,6 +18,11 @@ describe("kido local storage", function () {
         property2: 1234
     };
 
+    var object2 = {
+        property1: 'test 2',
+        property2: 2345
+    };
+
     it('should store an array in local storage', function (done) {
         var collection = new Kido().localStorage().collection('should-store');
         collection.persist(array).then(function () {
@@ -88,6 +93,22 @@ describe("kido local storage", function () {
         }).fail(function (err) {
             expect(err).to.be.equal('Item not found');
             done();
+        });
+    });
+
+    it('should drop a collection from local storage', function (done) {
+        var collection = new Kido().localStorage().collection('should-drop');
+        collection.persist(object).then(function () {
+            return collection.persist(object2);
+        }).then(function () {
+            return collection.drop();
+        }).then(function () {
+            return collection.length();
+        }).done(function (collection_length) {
+            expect(collection_length).to.be.equal(0);
+            done();
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            done(new Error('Failed with status:' + jqXHR.status + ', responseText:' + jqXHR.responseText + ', textStatus:' + textStatus + ', errorThrown:' + errorThrown));
         });
     });
 
