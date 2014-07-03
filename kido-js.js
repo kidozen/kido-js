@@ -1661,7 +1661,27 @@ var KidoOffline = function (kidoApp) {
         /**
          * @type {KidoLocalStorageCollection}
          */
-        pending_requests = self.app.localStorage().collection('pending_requests', this);
+        pending_requests = self.app.localStorage().collection('pending_requests', this),
+        /**
+         * @type {boolean}
+         */
+        isNative = (document.URL.indexOf("http://") == -1),
+        /**
+         * @type {URL|*}
+         */
+        URL = window.URL || window.webkitURL,
+        /**
+         * @type {Blob|*}
+         */
+        Blob = window.Blob,
+        /**
+         * @type {Worker|*}
+         */
+        Worker = window.Worker;
+
+    // TODO: change URL for something of our own hosted in a CDN
+    var URL_TO_CHECK = 'http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js',
+        DELAY_TO_CHECK = 5000;
 
     /**
      * Starts web worker which checks if there is internet connection.
@@ -1669,16 +1689,9 @@ var KidoOffline = function (kidoApp) {
      * @api private
      */
     this.startCheckingConnectivity = function () {
-        // TODO: change URL for something of our own hosted in a CDN
-        var URL_TO_CHECK = 'http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js',
-            DELAY_TO_CHECK = 5000;
         if (!worker) {
-            var URL = window.URL || window.webkitURL;
-            var Blob = window.Blob;
-            var Worker = window.Worker;
-
             // Check if browser is not able to use Web Workers
-            if (!URL || !Blob || !Worker) {
+            if (isNative || !URL || !Blob || !Worker) {
                 // Create fallback
                 worker = setInterval(function () {
                     console.log('Interval is checking connection...');
