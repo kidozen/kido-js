@@ -7,9 +7,9 @@ describe("kido authentication", function () {
     afterEach(function () {
         this.server.restore();
     });
-    
+
     it("should get the application's security configuration", function () {
-        var kido = new Kido('tasks', 'armonia.kidocloud.com');
+        new Kido('tasks', 'armonia.kidocloud.com');
         expect(this.server.requests.length).to.be.equal(1);
         expect(this.server.requests[0].method).to.be.equal('GET');
         expect(this.server.requests[0].url).to.be.equal('https://armonia.kidocloud.com/publicapi/apps?name=tasks');
@@ -22,7 +22,7 @@ describe("kido authentication", function () {
         this.server.respond();
         kido
             .authenticate('user1', 'pass1', 'Kidozen')
-            .done(function() {
+            .done(function () {
                 done("should have failed.");
             })
             .fail(function (err) {
@@ -106,12 +106,12 @@ describe("kido authentication", function () {
         this.server.respondWith([400, { "Content-Type": "text/plain"}, "unable to create token"]);
         this.server.respond();
     });
-    
+
     var tomorrow = ~~(new Date().getTime() / 1000) + 86400;
     var kidozenToken = {
-        "access_token": "http%3a%2f%2fschemas.kidozen.com%2fdomain=kidozen.com&http%3a%2f%2fschemas.kidozen.com%2fusersource=Admins+(Kidozen)&http%3a%2f%2fschemas.xmlsoap.org%2fws%2f2005%2f05%2fidentity%2fclaims%2femailaddress=armonia%40kidozen.com&http%3a%2f%2fschemas.xmlsoap.org%2fws%2f2005%2f05%2fidentity%2fclaims%2fname=Armonia+Admin&http%3a%2f%2fschemas.kidozen.com%2frole=Application+Admin&http%3a%2f%2fschemas.kidozen.com%2faction=allow+all+*&http%3a%2f%2fschemas.microsoft.com%2faccesscontrolservice%2f2010%2f07%2fclaims%2fidentityprovider=https%3a%2f%2fidentity.kidozen.com%2f&Audience=http%3a%2f%2ftasks.armonia.kidocloud.com%2f&"+
-                    "ExpiresOn="+tomorrow+"&"+
-                    "Issuer=https%3a%2f%2fkido-armonia.accesscontrol.windows.net%2f&HMACSHA256=mDEGilqWwMLoTgV27YrjbwERYp81jPE17m%2bHfsvPsSM%3d",
+        "access_token": "http%3a%2f%2fschemas.kidozen.com%2fdomain=kidozen.com&http%3a%2f%2fschemas.kidozen.com%2fusersource=Admins+(Kidozen)&http%3a%2f%2fschemas.xmlsoap.org%2fws%2f2005%2f05%2fidentity%2fclaims%2femailaddress=armonia%40kidozen.com&http%3a%2f%2fschemas.xmlsoap.org%2fws%2f2005%2f05%2fidentity%2fclaims%2fname=Armonia+Admin&http%3a%2f%2fschemas.kidozen.com%2frole=Application+Admin&http%3a%2f%2fschemas.kidozen.com%2faction=allow+all+*&http%3a%2f%2fschemas.microsoft.com%2faccesscontrolservice%2f2010%2f07%2fclaims%2fidentityprovider=https%3a%2f%2fidentity.kidozen.com%2f&Audience=http%3a%2f%2ftasks.armonia.kidocloud.com%2f&" +
+            "ExpiresOn=" + tomorrow + "&" +
+            "Issuer=https%3a%2f%2fkido-armonia.accesscontrol.windows.net%2f&HMACSHA256=mDEGilqWwMLoTgV27YrjbwERYp81jPE17m%2bHfsvPsSM%3d",
         "expirationTime": "2013-11-26T19:37:23.856Z"
     };
     it("should send the KidoZen token in service calls", function () {
@@ -121,7 +121,7 @@ describe("kido authentication", function () {
         this.server.respond();
         kido.authenticate('user1', 'pass1', 'Kidozen');
         // get the token from the IDP
-        this.server.respondWith(/identity/,[200, { "Content-Type": "text/xml" }, idpToken]);
+        this.server.respondWith(/identity/, [200, { "Content-Type": "text/xml" }, idpToken]);
         this.server.respondWith(/armonia/, [200, { "Content-Type": "application/json"}, JSON.stringify(kidozenToken)]);
         this.server.respond();
         // attempt to get something from storage service
@@ -129,15 +129,15 @@ describe("kido authentication", function () {
         expect(this.server.requests.length).to.be.equal(4);
         expect(this.server.requests[3].method).to.be.equal('GET');
         expect(this.server.requests[3].url).to.be.equal('https://tasks.armonia.kidocloud.com/storage/local/tasks?query=%7B%7D');
-        expect(this.server.requests[3].requestHeaders.authorization).to.be.equal('WRAP access_token="'+kidozenToken.access_token+'"');
+        expect(this.server.requests[3].requestHeaders.authorization).to.be.equal('WRAP access_token="' + kidozenToken.access_token + '"');
     });
 
     it("should refresh the token when it expires", function () {
         var now = ~~(new Date().getTime() / 1000);
         var expiredToken = {
-            "access_token": "http%3a%2f%2fschemas.kidozen.com%2fdomain=kidozen.com&http%3a%2f%2fschemas.kidozen.com%2fusersource=Admins+(Kidozen)&http%3a%2f%2fschemas.xmlsoap.org%2fws%2f2005%2f05%2fidentity%2fclaims%2femailaddress=armonia%40kidozen.com&http%3a%2f%2fschemas.xmlsoap.org%2fws%2f2005%2f05%2fidentity%2fclaims%2fname=Armonia+Admin&http%3a%2f%2fschemas.kidozen.com%2frole=Application+Admin&http%3a%2f%2fschemas.kidozen.com%2faction=allow+all+*&http%3a%2f%2fschemas.microsoft.com%2faccesscontrolservice%2f2010%2f07%2fclaims%2fidentityprovider=https%3a%2f%2fidentity.kidozen.com%2f&Audience=http%3a%2f%2ftasks.armonia.kidocloud.com%2f&"+
-                        "ExpiresOn=" + now + "&"+
-                        "Issuer=https%3a%2f%2fkido-armonia.accesscontrol.windows.net%2f&HMACSHA256=mDEGilqWwMLoTgV27YrjbwERYp81jPE17m%2bHfsvPsSM%3d"
+            "access_token": "http%3a%2f%2fschemas.kidozen.com%2fdomain=kidozen.com&http%3a%2f%2fschemas.kidozen.com%2fusersource=Admins+(Kidozen)&http%3a%2f%2fschemas.xmlsoap.org%2fws%2f2005%2f05%2fidentity%2fclaims%2femailaddress=armonia%40kidozen.com&http%3a%2f%2fschemas.xmlsoap.org%2fws%2f2005%2f05%2fidentity%2fclaims%2fname=Armonia+Admin&http%3a%2f%2fschemas.kidozen.com%2frole=Application+Admin&http%3a%2f%2fschemas.kidozen.com%2faction=allow+all+*&http%3a%2f%2fschemas.microsoft.com%2faccesscontrolservice%2f2010%2f07%2fclaims%2fidentityprovider=https%3a%2f%2fidentity.kidozen.com%2f&Audience=http%3a%2f%2ftasks.armonia.kidocloud.com%2f&" +
+                "ExpiresOn=" + now + "&" +
+                "Issuer=https%3a%2f%2fkido-armonia.accesscontrol.windows.net%2f&HMACSHA256=mDEGilqWwMLoTgV27YrjbwERYp81jPE17m%2bHfsvPsSM%3d"
         };
         // get application configuration
         this.server.respondWith(/publicapi/, [200, { "Content-Type": "application/json" }, JSON.stringify([wrapConfig])]);
@@ -145,7 +145,7 @@ describe("kido authentication", function () {
         this.server.respond();
         kido.authenticate('user1', 'pass1', 'Kidozen');
         // get the token from the IDP
-        this.server.respondWith(/identity/,[200, { "Content-Type": "text/xml" }, idpToken]);
+        this.server.respondWith(/identity/, [200, { "Content-Type": "text/xml" }, idpToken]);
         this.server.respondWith(/armonia/, [200, { "Content-Type": "application/json"}, JSON.stringify(expiredToken)]);
         this.server.respond();
         // attempt to get something from storage service
@@ -176,8 +176,8 @@ describe("kido authentication", function () {
 
     it("should timeout if invalid marketplace", function (done) {
         var expected_timeout = 10000
-          , app_name = "tasks"
-          , marketplace_url = "https://invalid-marketplace-url.com";
+            , app_name = "tasks"
+            , marketplace_url = "https://invalid-marketplace-url.com";
         this.timeout(expected_timeout + 100);
         this.server.requests = [];
         new Kido(app_name, marketplace_url);

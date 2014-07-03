@@ -98,9 +98,7 @@ describe("kido local storage", function () {
 
     it('should drop a collection from local storage', function (done) {
         var collection = new Kido().localStorage().collection('should-drop');
-        collection.persist(object).then(function () {
-            return collection.persist(object2);
-        }).then(function () {
+        $.when(collection.persist(object), collection.persist(object2)).then(function () {
             return collection.drop();
         }).then(function () {
             return collection.length();

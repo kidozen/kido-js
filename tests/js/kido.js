@@ -822,7 +822,7 @@ Kido.prototype.sms = function() {
  * You can use this through the storage() helper in Kido.
  * ie: var tasks = new Kido().storage().objectSet("tasks");
  *
- * @param kidoApp
+ * @param {Kido} kidoApp
  * @returns {KidoStorage}
  * @constructor
  */
@@ -939,7 +939,7 @@ var KidoObjectSet = function (name, parentStorage, caching) {
             isPrivate: isPrivate
         };
 
-        return self.invoke(data).pipe(function (result) {
+        return self.invoke(data).then(function (result) {
             return $.extend(obj, result);
         });
     };
@@ -966,7 +966,7 @@ var KidoObjectSet = function (name, parentStorage, caching) {
 
         return self
             .invoke(data)
-            .pipe(function (result) {
+            .then(function (result) {
                 return $.extend(obj, result);
             }, function (err) {
 
@@ -1924,7 +1924,13 @@ var KidoOffline = function (kidoApp) {
             ajax = $.ajax(settings);
         if (getAll || insert || update) {
             ajax.then(function (val) {
-                return collection.persist(val);
+                if ($.isArray(val)) {
+                    return collection.persist(val);
+                } else if (typeof val === 'object') {
+                    object._id = val._id ? val._id : null;
+                    object._metadata = val._metadata ? val._metadata : null;
+                    return collection.persist(object);
+                }
             });
         } else if (remove) {
             ajax.then(function () {
