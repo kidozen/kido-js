@@ -286,7 +286,6 @@ describe("kido storage", function () {
             });
     });
 
-    // TODO: fix this test
     it("should cache inserted result", function (done) {
         var object = { title: 'test', desc: 'this is a test', completed: false },
             kido = new Kido(),
@@ -295,10 +294,13 @@ describe("kido storage", function () {
         collection.drop().then(function () {
             return objectSet.insert(object);
         }).then(function () {
-            return collection.length();
-        }).then(function (result_length) {
-            expect(result_length).to.be.equal(1);
-            done();
+            // TODO: this delay should not be necessary
+            setTimeout(function () {
+                collection.length().then(function (result_length) {
+                    expect(result_length).to.be.equal(1);
+                    done();
+                });
+            }, 250);
         }).fail(function (err) {
             done(new Error(err));
         });

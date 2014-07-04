@@ -30,6 +30,20 @@ describe("kido datasources", function () {
             });
     });
 
+    it("should invoke an operation with caching enabled", function (done) {
+        new Kido()
+            .datasources("test-operation", true)
+            .invoke()
+            .done(function (data) {
+                expect(data).to.be.ok();
+                expect(data.status).to.be.equal(200);
+                done();
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                done(new Error("Failed with status:" + jqXHR.status + ", responseText:" + jqXHR.responseText + ", textStatus:" + textStatus + ", errorThrown:" + errorThrown));
+            });
+    });
+
     it("should fail when trying to query an operation", function (done) {
         new Kido()
             .datasources("test-operation")
@@ -110,6 +124,19 @@ describe("kido datasources", function () {
     it("should support invoking an operation ds with args", function (done) {
         new Kido()
             .datasources("test-operation")
+            .invoke({strParam: "fookey", objParam: {k1: "v1", k2: 2}, boolParam: true, arrParam: ["a", "b", "c"], numParam: 78.9}, 20)
+            .done(function (data) {
+                expect(data.status).to.be.equal(200);
+                done();
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                done(new Error("Failed with status:" + jqXHR.status + ", responseText:" + jqXHR.responseText + ", textStatus:" + textStatus + ", errorThrown:" + errorThrown));
+            });
+    });
+
+    it("should support invoking an operation ds with args and caching enabled", function (done) {
+        new Kido()
+            .datasources("test-operation", true)
             .invoke({strParam: "fookey", objParam: {k1: "v1", k2: 2}, boolParam: true, arrParam: ["a", "b", "c"], numParam: 78.9}, 20)
             .done(function (data) {
                 expect(data.status).to.be.equal(200);

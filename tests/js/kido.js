@@ -833,10 +833,10 @@ Kido.prototype.sms = function() {
  */
 var KidoStorage = function (kidoApp) {
 
-    var self = this;
-
     if (!(this instanceof KidoStorage)) return new KidoStorage(kidoApp);
 
+    var self = this;
+    this.SERVICE_NAME = "storage";
     this.app = kidoApp;
     this.rootUrl = "/storage/local";
 
@@ -902,8 +902,9 @@ var KidoObjectSet = function (name, parentStorage, caching) {
         data.settings.url = encodeURI(data.settings.url);
         data.settings.cache = data.cache;
 
+        // Offline configuration
         data.settings.kidoService = {
-            service: 'storage',
+            service: self.storage.SERVICE_NAME,
             collection: self.name,
             objectId: data.objectId,
             query: data.query,
@@ -1241,14 +1242,13 @@ Kido.prototype.services = function ( name ) {
  */
 var KidoDatasource = function (kidoApp, name, caching) {
 
-    var self = this;
-
     if (!(this instanceof KidoDatasource)) return new KidoDatasource(kidoApp, name);
     if (!kidoApp) throw "The 'kidoApp' argument is required by the KidoDatasource class.";
     if (!name) throw "The 'name' argument is required by the KidoDatasource class.";
 
     /** variables **/
-
+    var self = this;
+    this.SERVICE_NAME = "datasources";
     this.app = kidoApp;
     this.name = name;
     this._defaults = {};
@@ -1270,6 +1270,14 @@ var KidoDatasource = function (kidoApp, name, caching) {
         var args = $.extend({}, self._defaults, opts);
         var qs = Object.keys(args).length > 0 ? "?" + $.param(args) : "";
         var settings = timeout ? { headers: { "timeout": timeout } } : {};
+
+        // Offline configuration
+        settings.kidoService = {
+            service: self.SERVICE_NAME,
+            collection: self.name,
+            caching: self.caching
+        };
+
         self.app
             .get("/api/v2/datasources/" + self.name + qs, settings)
             .done(function (res) {
@@ -1293,6 +1301,14 @@ var KidoDatasource = function (kidoApp, name, caching) {
         var result = $.Deferred();
         var args = $.extend({}, self._defaults, opts);
         var settings = timeout ? { headers: { "timeout": timeout } } : {};
+
+        // Offline configuration
+        settings.kidoService = {
+            service: self.SERVICE_NAME,
+            collection: self.name,
+            caching: self.caching
+        };
+
         self.app
             .post("/api/v2/datasources/" + self.name, args, settings)
             .done(function (res) {
@@ -1652,6 +1668,13 @@ var KidoOffline = function (kidoApp) {
      */
     var self = this,
         /**
+         * @type {object}
+         */
+        services_caching_config = {
+            storage: true,
+            datasources: false
+        },
+        /**
          * @type {Worker}
          */
         worker = null,
@@ -1894,86 +1917,108 @@ var KidoOffline = function (kidoApp) {
             objectId = settings.kidoService.objectId,
             query = settings.kidoService.query,
             method = settings.type.toLowerCase(),
-            collection = self.app.localStorage().collection(service + '.' + name),
             getOne = (method === 'get' && objectId),
             getAll = (method === 'get' && !objectId),
             insert = (method === 'post' && data),
             update = (method === 'put' && data),
             remove = (method === 'delete' && objectId),
             drop = (method === 'delete' && !objectId),
-            object = data ? JSON.parse(data) : null,
-            old_id = object ? object._id : null,
-            local = (objectId && parseInt(objectId) < 0) || (old_id && parseInt(old_id) < 0);
+            deferred = $.Deferred(),
+            request;
 
-        if (getOne || getAll) {
-            // Caching is enabled so set a lower timeout
-            settings.timeout = 5000;
-        }
-
-        if (local) {
-            if (getOne) {
-                return collection.get(objectId);
-            } else if (remove) {
-                return collection.del(objectId).then(function () {
-                    return self.removePendingRequest(objectId);
-                });
-            } else if (update) {
-                settings.type = 'POST';
-                delete object._id;
-                settings.data = JSON.stringify(object);
-                objectId = null;
-            }
-        }
-
-        var deferred = $.Deferred(),
-            ajax = $.ajax(settings);
-        if (getAll || insert || update) {
-            ajax.then(function (val) {
-                if ($.isArray(val)) {
-                    return collection.persist(val);
-                } else if (typeof val === 'object') {
-                    object._id = val._id ? val._id : null;
-                    object._metadata = val._metadata ? val._metadata : null;
-                    return collection.persist(object);
-                }
-            });
-        } else if (remove) {
-            ajax.then(function () {
-                return collection.del(objectId ? objectId : old_id);
-            });
-        } else if (drop) {
-            ajax.then(function () {
-                return collection.drop();
-            });
-        }
-        ajax.fail(function (err) {
-            if (err.status !== 0) return deferred.reject(err);
-            self.startCheckingConnectivity();
-            // May be, it'd be better to reject with a custom message and sending the result anyway.
-            // So that, the developer can notify their users that they are working offline.
-            var success = function (val) {
-                if (insert || update || remove || drop) {
-                    var id = drop ? ($.now() * -1).toString() : (remove ? objectId : (update ? old_id : val._id));
+        if (!services_caching_config[service]) {
+            // Only cache requests
+            request = $.ajax(settings);
+            request.fail(function (err) {
+                if (err.status !== 0) return deferred.reject(err);
+                self.startCheckingConnectivity();
+                // May be, it'd be better to reject with a custom message and sending the result anyway.
+                // So that, the developer can notify their users that they are working offline.
+                if (!getOne && !getAll) {
+                    var id = ($.now() * -1).toString();
                     self.addPendingRequest(id, settings).then(function () {
-                        deferred.resolve(val);
+                        deferred.reject(err);
                     });
                 } else {
-                    deferred.resolve(val);
+                    deferred.reject(err);
                 }
-            };
-            if (getAll) {
-                collection.query(query).then(success);
-            } else if (getOne) {
-                collection.get(objectId).then(success);
-            } else if (insert || update) {
-                collection.persist(data).then(success);
-            } else if (remove) {
-                collection.del(objectId).then(success);
-            } else if (drop) {
-                collection.drop().then(success);
+            });
+        } else {
+            // Cache requests and data
+            var collection = self.app.localStorage().collection(service + '.' + name),
+                object = data ? JSON.parse(data) : null,
+                old_id = object ? object._id : null,
+                local = (objectId && parseInt(objectId) < 0) || (old_id && parseInt(old_id) < 0);
+
+            if (getOne || getAll) {
+                // Caching is enabled so set a lower timeout
+                settings.timeout = 5000;
             }
-        });
-        ajax.done(function (val) {
+
+            if (local) {
+                if (getOne) {
+                    return collection.get(objectId);
+                } else if (remove) {
+                    return collection.del(objectId).then(function () {
+                        return self.removePendingRequest(objectId);
+                    });
+                } else if (update) {
+                    settings.type = 'POST';
+                    delete object._id;
+                    settings.data = JSON.stringify(object);
+                    objectId = null;
+                }
+            }
+
+            request = $.ajax(settings);
+            if (getOne || getAll) {
+                request.then(function (val) {
+                    return collection.persist(val);
+                });
+            } else if (insert || update) {
+                request.then(function (val) {
+                    object._id = val._id ? val._id : (object._id ? object._id : null);
+                    object._metadata = val._metadata ? val._metadata : (object._metadata ? object._metadata : null);
+                    return collection.persist(object);
+                });
+            } else if (remove) {
+                request.then(function () {
+                    return collection.del(objectId ? objectId : old_id);
+                });
+            } else if (drop) {
+                request.then(function () {
+                    return collection.drop();
+                });
+            }
+            request.fail(function (err) {
+                if (err.status !== 0) return deferred.reject(err);
+                self.startCheckingConnectivity();
+                // May be, it'd be better to reject with a custom message and sending the result anyway.
+                // So that, the developer can notify their users that they are working offline.
+                var success = function (val) {
+                    if (insert || update || remove || drop) {
+                        var id = drop ? ($.now() * -1).toString() : (remove ? objectId : (update ? old_id : val._id));
+                        self.addPendingRequest(id, settings).then(function () {
+                            deferred.resolve(val);
+                        });
+                    } else {
+                        deferred.resolve(val);
+                    }
+                };
+                if (getAll) {
+                    collection.query(query).then(success);
+                } else if (getOne) {
+                    collection.get(objectId).then(success);
+                } else if (insert || update) {
+                    collection.persist(data).then(success);
+                } else if (remove) {
+                    collection.del(objectId).then(success);
+                } else if (drop) {
+                    collection.drop().then(success);
+                }
+            });
+        }
+        request.done(function (val) {
             deferred.resolve(val);
         });
         return deferred.promise();
