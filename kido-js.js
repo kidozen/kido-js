@@ -57,9 +57,9 @@ var Kido = function (name, marketplace) {
      * @api public
      */
     this.authenticate = function () {
-        if (this.hosted) return $.Deferred().reject("No need to authenticate to this Web App");
+        if (self.hosted) return $.Deferred().reject("No need to authenticate to this Web App");
         var authArgs = arguments;
-        this.token = this.authConfig.then(function (config) {
+        self.token = self.authConfig.then(function (config) {
             if (authArgs.length === 0) {
                 return passiveAuth(config);
             }
@@ -73,7 +73,7 @@ var Kido = function (name, marketplace) {
 
             return activeAuth(config, authArgs[0], authArgs[1], authArgs[2], ip);
         });
-        return this.token;
+        return self.token;
     };
 
     /**
@@ -102,7 +102,11 @@ var Kido = function (name, marketplace) {
                     // if the token expired, then user the cached credentials
                     // to refresh the KidoZen token.
                     if (token.expiresOn < new Date().getTime()) {
-                        return self.authenticate(_username, _password, _provider);
+                        if (_username && _password && _provider) {
+                            return self.authenticate(_username, _password, _provider);
+                        } else {
+                            return self.authenticate();
+                        }
                     }
                     return token;
                 })
@@ -238,6 +242,7 @@ var Kido = function (name, marketplace) {
                     if (!token || (!token.access_token && !token.rawToken)) {
                         return deferred.reject('Unable to retrieve KidoZen token.');
                     }
+                    self.authenticated = true;
                     deferred.resolve(processToken(token));
                 }
             });
