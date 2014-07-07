@@ -338,12 +338,21 @@ var Kido = function (name, marketplace) {
  */
 var KidoConfig = function (kidoApp) {
 
-    var self = this;
-
     if (!(this instanceof KidoConfig)) return new KidoConfig(kidoApp);
     if (!kidoApp) throw "The 'kidoApp' argument is required by the KidoConfig class.";
 
+    /**
+     * @type {KidoConfig}
+     */
+    var self = this;
+    /**
+     * @type {Kido}
+     */
     this.app = kidoApp;
+    /**
+     * @constant {string}
+     */
+    this.SERVICE_NAME = "config";
 
     this.set = function (name, data) {
         if (!name) throw "The config key 'name' is required to set a value.";
@@ -621,12 +630,21 @@ Kido.prototype.logging = function () {
  */
 var KidoNotifications = function (kidoApp) {
 
-    var self = this;
-
     if (!(this instanceof KidoNotifications)) return new KidoNotifications(kidoApp);
     if (!kidoApp) throw "The 'kidoApp' argument is required by the KidoNotifications class.";
 
+    /**
+     * @type {KidoNotifications}
+     */
+    var self = this;
+    /**
+     * @type {Kido}
+     */
     this.app = kidoApp;
+    /**
+     * @constant {string}
+     */
+    this.SERVICE_NAME = "notifications";
 
     this.send = function (channel, title, text, type, badge, image, param) {
 
@@ -695,12 +713,22 @@ Kido.prototype.notifications = function () {
  */
 var KidoPubsub = function (kidoApp) {
 
-    var self = this;
-
     if (!(this instanceof KidoPubsub)) return new KidoPubsub(kidoApp);
     if (!kidoApp) throw "The 'kidoApp' argument is required by the KidoPubsub class.";
 
+    /**
+     * @type {KidoPubsub}
+     */
+    var self = this;
+    /**
+     * @type {Kido}
+     */
     this.app = kidoApp;
+    /**
+     * @constant {string}
+     */
+    this.SERVICE_NAME = "pubsub";
+
 
     this.channel = function (name) {
         return new KidoPubsubChannel(name, self.app);
@@ -760,13 +788,25 @@ Kido.prototype.pubsub = function () {
  */
 var KidoQueues = function (kidoApp) {
 
-    var self = this;
-
     if (!(this instanceof KidoQueues)) return new KidoQueues(kidoApp);
     if (!kidoApp) throw "The 'kidoApp' argument is required by the KidoQueues class.";
 
+    /**
+     * @type {KidoQueues}
+     */
+    var self = this;
+    /**
+     * @type {Kido}
+     */
     this.app = kidoApp;
+    /**
+     * @type {string}
+     */
     this.rootUrl = "/queue/local/";
+    /**
+     * @constant {string}
+     */
+    this.SERVICE_NAME = "queue";
 
     this.queue = function (name) {
 
@@ -811,12 +851,21 @@ Kido.prototype.queues = function () {
  */
 var KidoSecurity = function (kidoApp) {
 
-    var self = this;
-
     if (!(this instanceof KidoSecurity)) return new KidoSecurity(kidoApp);
     if (!kidoApp) throw "The 'kidoApp' argument is required by the KidoSecurity class.";
 
+    /**
+     * @type {KidoSecurity}
+     */
+    var self = this;
+    /**
+     * @type {Kido}
+     */
     this.app = kidoApp;
+    /**
+     * @constant {string}
+     */
+    this.SERVICE_NAME = "security";
 
     this.getLoggedInUser = function () {
         return self.app.get("/user");
@@ -846,12 +895,21 @@ Kido.prototype.security = function () {
  */
 var KidoSms = function (kidoApp) {
 
-    var self = this;
-
     if (!(this instanceof KidoSms)) return new KidoSms(kidoApp);
     if (!kidoApp) throw "The 'kidoApp' argument is required by the KidoSms class.";
 
+    /**
+     * @type {KidoSms}
+     */
+    var self = this;
+    /**
+     * @type {Kido}
+     */
     this.app = kidoApp;
+    /**
+     * @constant {string}
+     */
+    this.SERVICE_NAME = "security";
 
     this.send = function (to, message) {
         if (!to) throw "The 'to' argument is required to send an sms.";
@@ -1190,12 +1248,21 @@ Kido.prototype.storage = function () {
  */
 var KidoStorageIndexes = function (objectSet) {
 
-    var self = this;
-
     if (!(this instanceof KidoStorageIndexes)) return new KidoStorageIndexes(objectSet);
     if (!objectSet) throw "The 'objectSet' argument is required by the KidoStorageIndexes class.";
 
+    /**
+     * @type {KidoStorageIndexes}
+     */
+    var self = this;
+    /**
+     * @type {KidoObjectSet}
+     */
     this.objectSet = objectSet;
+    /**
+     * @constant {string}
+     */
+    this.SERVICE_NAME = "storageindexes";
 
     this.all = function () {
         var data = {
@@ -1285,19 +1352,30 @@ KidoObjectSet.prototype.indexes = function () {
  */
 var KidoService = function (kidoApp, name) {
 
-    var self = this;
-
     if (!(this instanceof KidoService)) return new KidoService(kidoApp);
     if (!kidoApp) throw "The 'kidoApp' argument is required by the KidoService class.";
 
-    /** variables **/
-
+    /**
+     * @type {KidoService}
+     */
+    var self = this;
+    /**
+     * @type {Kido}
+     */
     this.app = kidoApp;
+    /**
+     * @type {string}
+     */
     this.name = name;
+    /**
+     * @type {Object}
+     * @private
+     */
     this._defaults = {};
-
-
-    /** methods **/
+    /**
+     * @constant {string}
+     */
+    this.SERVICE_NAME = "services";
 
     this.defaults = function (opts) {
         self._defaults = $.extend(self._defaults, opts || {});
