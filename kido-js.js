@@ -6,10 +6,17 @@
  * Use the Kido class to gain access to all the application's backend services.
  */
 
-//make sure JSON.parse and JSON.stringify exist.
-
+// make sure JSON.parse and JSON.stringify exist.
 if (!JSON || !JSON.parse || !JSON.stringify) throw "KidoZen requires JSON.stringify. Try adding a polyfil lib like json2.js";
 
+/**
+ * Kido is the main class to manage Kidozen services.
+ *
+ * @param {string} [name=]
+ * @param {string} [marketplace=]
+ * @returns {Kido}
+ * @constructor
+ */
 var Kido = function (name, marketplace) {
 
     if (!(this instanceof Kido)) return new Kido();
@@ -78,7 +85,7 @@ var Kido = function (name, marketplace) {
 
     /**
      * send an http request to kidozen.
-     * @param {object} settings - settings as in jQuery.ajax settings.
+     * @param {Object} settings - settings as in jQuery.ajax settings.
      * @api private.
      */
     this.send = function (settings) {
@@ -124,7 +131,7 @@ var Kido = function (name, marketplace) {
      * make a GET http request to kidozen.
      *
      * @param url {string}      - url for GET.
-     * @param settings {object} - optional settings as in $.ajax settings.
+     * @param settings {Object} - optional settings as in $.ajax settings.
      * @api private
      */
     this.get = function (url, settings) {
@@ -137,8 +144,8 @@ var Kido = function (name, marketplace) {
      * make a POST http request to kidozen.
      *
      * @param url {string}
-     * @param data {object}     - data to POST in the http body.
-     * @param settings {object} - optional settings as in $.ajax. settings.
+     * @param data {Object}     - data to POST in the http body.
+     * @param settings {Object} - optional settings as in $.ajax. settings.
      * @api private.
      */
     this.post = function (url, data, settings) {
@@ -153,7 +160,7 @@ var Kido = function (name, marketplace) {
     /**
      * make a DELETE http request to kidozen.
      * @param url {string}      - url for GET.
-     * @param settings {object} - optional settings as in $.ajax settings.
+     * @param settings {Object} - optional settings as in $.ajax settings.
      * @api private
      */
     this.del = function (url, settings) {
@@ -165,7 +172,7 @@ var Kido = function (name, marketplace) {
 
     /**
      * Executes an HTTP request
-     * @param {object} settings
+     * @param {Object} settings
      * @returns {*}
      * @api private
      */
@@ -322,29 +329,29 @@ var Kido = function (name, marketplace) {
 
 };
 
-
 /**
- * access to the configuration backend service.
+ * Access to the configuration backend service.
  *
- * @param kidoApp {object} - instance of the Kido class.
+ * @param kidoApp {Kido} - instance of the Kido class.
+ * @returns {KidoConfig}
+ * @constructor
  */
-
-var KidoConfig = function ( kidoApp ) {
+var KidoConfig = function (kidoApp) {
 
     var self = this;
 
     if (!(this instanceof KidoConfig)) return new KidoConfig(kidoApp);
     if (!kidoApp) throw "The 'kidoApp' argument is required by the KidoConfig class.";
-    
+
     this.app = kidoApp;
 
-    this.set = function ( name, data ) {
-        if(!name) throw "The config key 'name' is required to set a value.";
+    this.set = function (name, data) {
+        if (!name) throw "The config key 'name' is required to set a value.";
         return self.app.post("/config/" + name, data);
     };
 
-    this.get = function ( name ) {
-        if(!name) throw "The config key 'name' is required to retrieve the value.";
+    this.get = function (name) {
+        if (!name) throw "The config key 'name' is required to retrieve the value.";
         return self.app.get("/config/" + name);
     };
 
@@ -353,37 +360,46 @@ var KidoConfig = function ( kidoApp ) {
     };
 
     this.del = function (name) {
-        if(!name) throw "The config key 'name' is required to delete a value.";
+        if (!name) throw "The config key 'name' is required to delete a value.";
         return self.app.del("/config/" + name);
     };
 };
 
-
 /**
- * add a singleton helper to Kido to retrieve an instance of KidoConfig.
+ * Retrieves a singleton instance of KidoConfig.
  *
- * @api public
+ * @returns {KidoConfig}
  */
-
-Kido.prototype.config = function() {
+Kido.prototype.config = function () {
     if (!this._config) this._config = new KidoConfig(this);
     return this._config;
 };
 
 /**
- * access to the email backend service.
+ * Access to the email backend service.
  *
- * @param kidoApp {object} - instance of the Kido class.
+ * @param kidoApp {Kido} - instance of the Kido class.
+ * @returns {KidoEmail}
+ * @constructor
  */
+var KidoEmail = function (kidoApp) {
 
-var KidoEmail = function ( kidoApp ) {
-
-    var self = this;
-
+    /** Validations **/
     if (!(this instanceof KidoEmail)) return new KidoEmail(kidoApp);
     if (!kidoApp) throw "The 'kidoApp' argument is required by the KidoEmail class.";
 
+    /**
+     * @type {KidoEmail}
+     */
+    var self = this;
+    /**
+     * @type {Kido}
+     */
     this.app = kidoApp;
+    /**
+     * @constant {string}
+     */
+    this.SERVICE_NAME = "email";
 
     this.send = function (from, to, subject, bodyText, bodyHtml, attachments, timeout) {
 
@@ -406,10 +422,10 @@ var KidoEmail = function ( kidoApp ) {
             bodyHtml = null;
         }
         //construct email object.
-        var mail = { to: to, from: from };
-        if (typeof(subject)  === 'string' && subject.length>0 ) mail.subject  = subject;
-        if (typeof(bodyText) === 'string' && bodyText.length>0) mail.bodyText = bodyText;
-        if (typeof(bodyHtml) === 'string' && bodyHtml.length>0) mail.bodyHtml = bodyHtml;
+        mail = { to: to, from: from };
+        if (typeof(subject) === 'string' && subject.length > 0) mail.subject = subject;
+        if (typeof(bodyText) === 'string' && bodyText.length > 0) mail.bodyText = bodyText;
+        if (typeof(bodyHtml) === 'string' && bodyHtml.length > 0) mail.bodyHtml = bodyHtml;
         if (attachments instanceof Array) mail.attachments = attachments;
 
         return self.app.send({
@@ -444,7 +460,7 @@ var KidoEmail = function ( kidoApp ) {
             }
         } else if (typeof(formOrName) === 'string') {
             var name = formOrName;
-            formOrName = new FormData();    
+            formOrName = new FormData();
 
             if (!data || typeof(data) === 'function') throw "if a name was specified, 'data' argument is required.";
             if (typeof data === 'string')   data = new Blob([data], { type: "text/text" });
@@ -457,11 +473,11 @@ var KidoEmail = function ( kidoApp ) {
 
         var dfd = new jQuery.Deferred();
 
-        var success = function(e) {
+        var success = function (e) {
             dfd.resolve(JSON.parse(e.currentTarget.response));
         };
 
-        var failure = function(e) {
+        var failure = function (e) {
             dfd.reject(e.currentTarget);
         };
 
@@ -478,29 +494,39 @@ var KidoEmail = function ( kidoApp ) {
 };
 
 /**
- * add a singleton helper to Kido to retrieve an instance of KidoEmail.
+ * Retrieves a singleton instance of KidoEmail.
  *
- * @api public
+ * @returns {KidoEmail}
  */
-
-Kido.prototype.email = function() {
+Kido.prototype.email = function () {
     if (!this._email) this._email = new KidoEmail(this);
     return this._email;
 };
+
 /**
- * access to the logging backend service.
+ * Access to the logging backend service.
  *
- * @param kidoApp {object} - instance of the Kido class.
+ * @param kidoApp {Kido} - instance of the Kido class.
+ * @returns {KidoLogging}
+ * @constructor
  */
-
-var KidoLogging = function ( kidoApp ) {
-
-    var self = this;
+var KidoLogging = function (kidoApp) {
 
     if (!(this instanceof KidoLogging)) return new KidoLogging(kidoApp);
     if (!kidoApp) throw "The 'kidoApp' argument is required by the KidoLogging class.";
-    
+
+    /**
+     * @type {KidoLogging}
+     */
+    var self = this;
+    /**
+     * @type {Kido}
+     */
     this.app = kidoApp;
+    /**
+     * @constant {string}
+     */
+    this.SERVICE_NAME = "logging";
 
     this.writeVerbose = function (data) {
         return self.write(data, 0);
@@ -546,7 +572,7 @@ var KidoLogging = function ( kidoApp ) {
         });
     };
 
-    this.get = function(since, level, skip, limit) {
+    this.get = function (since, level, skip, limit) {
 
         var query = {};
 
@@ -557,7 +583,7 @@ var KidoLogging = function ( kidoApp ) {
             if (!(since instanceof Date)) throw "'Since' argument accepts only null or Date values.";
             query.dateTime = { $gt: since };
         } else {
-            query.dateTime = {"$exists":true};
+            query.dateTime = {"$exists": true};
         }
 
         var options = { $sort: { dateTime: -1 } };
@@ -576,24 +602,24 @@ var KidoLogging = function ( kidoApp ) {
     };
 };
 
-
 /**
- * singleton access to a KidoLogging instance.
+ * Retrieves a singleton instance of KidoLogging.
+ *
+ * @returns {KidoLogging}
  */
-
-Kido.prototype.logging = function() {
+Kido.prototype.logging = function () {
     if (!this._logging) this._logging = new KidoLogging(this);
     return this._logging;
 };
 
-
 /**
- * access to the Notifications backend service.
+ * Access to the Notifications backend service.
  *
- * @param kidoApp {object} - instance of the Kido class.
+ * @param kidoApp {Kido} - instance of the Kido class.
+ * @returns {KidoNotifications}
+ * @constructor
  */
-
-var KidoNotifications = function ( kidoApp ) {
+var KidoNotifications = function (kidoApp) {
 
     var self = this;
 
@@ -608,10 +634,10 @@ var KidoNotifications = function ( kidoApp ) {
         if (!title) throw "'title' argument is required.";
 
         var notification = { title: title };
-        if (typeof(type)==='string' && type) notification.type = type;
-        if (typeof(text)==='string' && text) notification.text = text;
-        if (typeof(image)==='string' && image) notification.image = image;
-        if (typeof(badge)==='number') notification.badge = badge;
+        if (typeof(type) === 'string' && type) notification.type = type;
+        if (typeof(text) === 'string' && text) notification.text = text;
+        if (typeof(image) === 'string' && image) notification.image = image;
+        if (typeof(badge) === 'number') notification.badge = badge;
         if (param) notification.param = param;
 
         return self.app.send({
@@ -620,7 +646,7 @@ var KidoNotifications = function ( kidoApp ) {
             data: JSON.stringify(notification)
         });
     };
-    
+
     /**
      * subscribe to a push notification channel to start receiving
      * events.
@@ -650,18 +676,24 @@ var KidoNotifications = function ( kidoApp ) {
     };
 };
 
-Kido.prototype.notifications = function() {
+/**
+ * Retrieves a singleton instance of KidoNotifications.
+ *
+ * @returns {KidoNotifications}
+ */
+Kido.prototype.notifications = function () {
     if (!this._notifications) this._notifications = new KidoNotifications(this);
     return this._notifications;
 };
 
 /**
- * access to the Pubsub backend service.
+ * Access to the Pubsub backend service.
  *
- * @param kidoApp {object} - instance of the Kido class.
+ * @param kidoApp {Kido} - instance of the Kido class.
+ * @returns {KidoPubsub}
+ * @constructor
  */
-
-var KidoPubsub = function ( kidoApp ) {
+var KidoPubsub = function (kidoApp) {
 
     var self = this;
 
@@ -670,19 +702,19 @@ var KidoPubsub = function ( kidoApp ) {
 
     this.app = kidoApp;
 
-    this.channel = function ( name ) {
+    this.channel = function (name) {
         return new KidoPubsubChannel(name, self.app);
     };
 };
 
-var KidoPubsubChannel = function ( name, app ) {
+var KidoPubsubChannel = function (name, app) {
 
     var self = this;
     this.name = name;
     this.app = app;
     this.rootUrl = "/pubsub/local/";
 
-    this.publish = function ( data ) {
+    this.publish = function (data) {
         return self.app.send({
             url: self.rootUrl + self.name,
             type: "POST",
@@ -691,7 +723,7 @@ var KidoPubsubChannel = function ( name, app ) {
         });
     };
 
-    this.subscribe = function ( cb ) {
+    this.subscribe = function (cb) {
 
         var socket = io.connect('/pubsub');
 
@@ -699,27 +731,34 @@ var KidoPubsubChannel = function ( name, app ) {
             socket.emit('bindToChannel', { application: self.app.name, channel: self.name });
         });
 
-        socket.on('bindAccepted', function(m){
+        socket.on('bindAccepted', function (m) {
             socket.on(m.responseChannelName, cb);
         });
 
-        return function(){
+        return function () {
             socket.disconnect();
         };
     };
 };
 
+/**
+ * Retrieves a singleton instance of KidoPubsub.
+ *
+ * @returns {KidoPubsub}
+ */
 Kido.prototype.pubsub = function () {
     if (!this._pubsub) this._pubsub = new KidoPubsub(this);
     return this._pubsub;
 };
-/**
- * access to the Queues backend service.
- *
- * @param kidoApp {object} - instance of the Kido class.
- */
 
-var KidoQueues = function ( kidoApp ) {
+/**
+ * Access to the Queues backend service.
+ *
+ * @param kidoApp {Kido} - instance of the Kido class.
+ * @returns {KidoQueues}
+ * @constructor
+ */
+var KidoQueues = function (kidoApp) {
 
     var self = this;
 
@@ -729,10 +768,10 @@ var KidoQueues = function ( kidoApp ) {
     this.app = kidoApp;
     this.rootUrl = "/queue/local/";
 
-    this.queue = function ( name ) {
+    this.queue = function (name) {
 
         return {
-            push: function ( data ) {
+            push: function (data) {
 
                 var msg = {
                     url: self.rootUrl + name,
@@ -753,18 +792,24 @@ var KidoQueues = function ( kidoApp ) {
     };
 };
 
+/**
+ * Retrieves a singleton instance of KidoQueues.
+ *
+ * @returns {KidoQueues}
+ */
 Kido.prototype.queues = function () {
     if (!this._queues) this._queues = new KidoQueues(this);
     return this._queues;
 };
 
 /**
- * access to the Security backend service.
+ * Access to the Security backend service.
  *
- * @param kidoApp {object} - instance of the Kido class.
+ * @param kidoApp {Kido} - instance of the Kido class.
+ * @returns {KidoSecurity}
+ * @constructor
  */
-
-var KidoSecurity = function ( kidoApp ) {
+var KidoSecurity = function (kidoApp) {
 
     var self = this;
 
@@ -782,18 +827,24 @@ var KidoSecurity = function ( kidoApp ) {
     };
 };
 
-Kido.prototype.security = function() {
+/**
+ * Retrieves a singleton instance of KidoSecurity.
+ *
+ * @returns {KidoSecurity}
+ */
+Kido.prototype.security = function () {
     if (!this._security) this._security = new KidoSecurity(this);
     return this._security;
 };
 
 /**
- * access to the Sms backend service.
+ * Access to the Sms backend service.
  *
- * @param kidoApp {object} - instance of the Kido class.
+ * @param kidoApp {Kido} - instance of the Kido class.
+ * @returns {KidoSms}
+ * @constructor
  */
-
-var KidoSms = function ( kidoApp ) {
+var KidoSms = function (kidoApp) {
 
     var self = this;
 
@@ -802,26 +853,32 @@ var KidoSms = function ( kidoApp ) {
 
     this.app = kidoApp;
 
-    this.send = function ( to, message ) {
+    this.send = function (to, message) {
         if (!to) throw "The 'to' argument is required to send an sms.";
         if (!message) throw "The 'message' argument is required to send an sms.";
-        
+
         return self.app.send({
             url: "/sms?to=" + encodeURIComponent(to) + "&message=" + encodeURIComponent(message),
             type: "POST"
         });
     };
 
-    this.getStatus = function ( messageId ) {
-        if (!messageId) throw "The 'messageId' argument is required to get message status";        
+    this.getStatus = function (messageId) {
+        if (!messageId) throw "The 'messageId' argument is required to get message status";
         return self.app.get("/sms/" + messageId);
     };
 };
 
-Kido.prototype.sms = function() {
+/**
+ * Retrieves a singleton instance of KidoSms.
+ *
+ * @returns {KidoSms}
+ */
+Kido.prototype.sms = function () {
     if (!this._sms) this._sms = new KidoSms(this);
     return this._sms;
 };
+
 /**
  * Access to the object storage backend service.
  * You can use this through the storage() helper in Kido.
@@ -835,11 +892,29 @@ var KidoStorage = function (kidoApp) {
 
     if (!(this instanceof KidoStorage)) return new KidoStorage(kidoApp);
 
+    /**
+     * @type {KidoStorage}
+     */
     var self = this;
-    this.SERVICE_NAME = "storage";
+    /**
+     * @type {Kido}
+     */
     this.app = kidoApp;
+    /**
+     * @constant {string}
+     */
+    this.SERVICE_NAME = "storage";
+    /**
+     * @type {string}
+     */
     this.rootUrl = "/storage/local";
 
+    /**
+     * Retrieves the names of the object sets
+     *
+     * @returns {*}
+     * @api public
+     */
     this.getObjectSetNames = function () {
         return self.app.get(self.rootUrl);
     };
@@ -866,16 +941,29 @@ var KidoStorage = function (kidoApp) {
  */
 var KidoObjectSet = function (name, parentStorage, caching) {
 
-    var self = this;
-
     /** Validations **/
     if (!(this instanceof KidoObjectSet)) return new KidoObjectSet(name, parentStorage);
     if (!parentStorage) throw "KidoObjectSet needs a parent KidoStorage object.";
 
-    /** Public properties **/
+    /**
+     * @type {KidoObjectSet}
+     */
+    var self = this;
+    /**
+     * @type {KidoStorage}
+     */
     this.storage = parentStorage;
+    /**
+     * @type {string}
+     */
     this.name = name || 'default';
+    /**
+     * @type {string}
+     */
     this.rootUrl = this.storage.rootUrl + "/" + this.name;
+    /**
+     * @type {boolean}
+     */
     this.caching = caching || false;
 
     /**
@@ -917,7 +1005,7 @@ var KidoObjectSet = function (name, parentStorage, caching) {
     /**
      * inserts an object in the KidoZen Object Storage backend service.
      *
-     * @param obj {object}        - the object to store.
+     * @param obj {Object}        - the object to store.
      * @param isPrivate {boolean} - whether the object is private for that
      *                              user.
      * @api public
@@ -1026,10 +1114,10 @@ var KidoObjectSet = function (name, parentStorage, caching) {
 
         self
             .invoke({
-            settings: { type: "GET" },
-            objectId: objectId,
-            cache: false
-        })
+                settings: { type: "GET" },
+                objectId: objectId,
+                cache: false
+            })
             .fail(function (err) {
                 if (err.status === 404) {
                     result.resolve(null);
@@ -1084,23 +1172,23 @@ var KidoObjectSet = function (name, parentStorage, caching) {
 };
 
 /**
- * Retrieves an instance of KidoStorage.
+ * Retrieves a singleton instance of KidoStorage.
  *
  * @returns {KidoStorage}
  */
 Kido.prototype.storage = function () {
-    //cache the KidoStorage instance
     if (!this._storage) this._storage = new KidoStorage(this);
     return this._storage;
 };
 
 /**
- * access to the storage backend service, to manage object set indexes.
+ * Access to the storage backend service, to manage object set indexes.
  *
- * @param objectSet {object} - instance of the KidoObjectSet class.
+ * @param objectSet {KidoObjectSet} - instance of the KidoObjectSet class.
+ * @returns {KidoStorageIndexes}
+ * @constructor
  */
-
-var KidoStorageIndexes = function ( objectSet ) {
+var KidoStorageIndexes = function (objectSet) {
 
     var self = this;
 
@@ -1114,31 +1202,31 @@ var KidoStorageIndexes = function ( objectSet ) {
             indexes: "indexes",
             settings: {
                 type: "GET"
-        }};
+            }};
         return self.objectSet.invoke(data);
     };
 
     this.get = function (name) {
 
-        if(!name) throw "The 'name' argument is required to retrieve an object set index.";
+        if (!name) throw "The 'name' argument is required to retrieve an object set index.";
 
         var data = {
             indexes: "indexes?name=" + name,
             settings: {
                 type: "GET"
-        }};
+            }};
         return self.objectSet.invoke(data);
     };
 
     this.del = function (name) {
-        
-        if(!name) throw "The 'name' argument is required to delete an object set index.";
+
+        if (!name) throw "The 'name' argument is required to delete an object set index.";
 
         var data = {
             indexes: "indexes/" + name,
             settings: {
                 type: "DELETE"
-        }};
+            }};
         return self.objectSet.invoke(data);
     };
 
@@ -1152,42 +1240,50 @@ var KidoStorageIndexes = function ( objectSet ) {
     //please refer to: http://www.mongodb.org/display/DOCS/Indexes#Indexes-CreationOptions
     this.create = function (spec, safe, unique, sparse, background, dropDups, min, max) {
 
-        if(!spec) throw "The 'spec' argument is required to create an index.";
-        if(!safe) safe = false;
-        if(!unique) unique = false;
-        if(!sparse) sparse = false;
-        if(!background) background = false;
-        if(!dropDups) dropDups = false;
+        if (!spec) throw "The 'spec' argument is required to create an index.";
+        if (!safe) safe = false;
+        if (!unique) unique = false;
+        if (!sparse) sparse = false;
+        if (!background) background = false;
+        if (!dropDups) dropDups = false;
 
         var index = {
             spec: spec,
             options: { safe: safe, unique: unique, sparse: sparse, background: background, dropDups: dropDups }
         };
 
-        if(min && min.toString() != "0") index.options.min = min;
-        if(max && max.toString() != "0") index.options.max = max;
+        if (min && min.toString() != "0") index.options.min = min;
+        if (max && max.toString() != "0") index.options.max = max;
 
         var data = {
             indexes: "indexes",
             settings: {
                 type: "POST",
                 data: JSON.stringify(index)
-        }};
+            }};
         return self.objectSet.invoke(data);
     };
 };
 
-KidoObjectSet.prototype.indexes = function() {
+/**
+ * Retrieves a singleton instance of KidoStorageIndexes.
+ *
+ * @returns {KidoStorageIndexes}
+ */
+KidoObjectSet.prototype.indexes = function () {
     if (!this._indexes) this._indexes = new KidoStorageIndexes(this);
     return this._indexes;
 };
-/**
- * access to the Enterprise Services backend service.
- *
- * @param kidoApp {object} - instance of the Kido class.
- */
 
-var KidoService = function ( kidoApp, name ) {
+/**
+ * Access to the Enterprise Services backend service.
+ *
+ * @param kidoApp {Kido} - instance of the Kido class.
+ * @param name
+ * @returns {KidoService}
+ * @constructor
+ */
+var KidoService = function (kidoApp, name) {
 
     var self = this;
 
@@ -1203,18 +1299,18 @@ var KidoService = function ( kidoApp, name ) {
 
     /** methods **/
 
-    this.defaults = function ( opts ) {
+    this.defaults = function (opts) {
         self._defaults = $.extend(self._defaults, opts || {});
         return self;
     };
 
-    this.invoke = function ( name, opts, timeout ) {
+    this.invoke = function (name, opts, timeout) {
         var result = $.Deferred();
         var args = $.extend({}, self._defaults, opts);
         var settings = timeout ? { headers: { "timeout": timeout } } : {};
         self.app
             .post("/api/services/" + self.name + "/invoke/" + name, args, settings)
-            .done(function ( res ) {
+            .done(function (res) {
                 if (res.error) {
                     return result.reject(res.error);
                 }
@@ -1227,14 +1323,20 @@ var KidoService = function ( kidoApp, name ) {
     };
 };
 
-Kido.prototype.services = function ( name ) {
+/**
+ * Retrieves an instance of KidoService;
+ *
+ * @param {string} name
+ * @returns {KidoService}
+ */
+Kido.prototype.services = function (name) {
     return new KidoService(this, name);
 };
 
 /**
  * Access to the Datasources backend service.
  *
- * @param kidoApp {Kido}
+ * @param kidoApp {Kido} - instance of the Kido class.
  * @param name {string}
  * @param [caching=false] {boolean}
  * @returns {KidoDatasource}
@@ -1246,21 +1348,51 @@ var KidoDatasource = function (kidoApp, name, caching) {
     if (!kidoApp) throw "The 'kidoApp' argument is required by the KidoDatasource class.";
     if (!name) throw "The 'name' argument is required by the KidoDatasource class.";
 
-    /** variables **/
+    /**
+     * @type {KidoDatasource}
+     */
     var self = this;
-    this.SERVICE_NAME = "datasources";
+    /**
+     * @type {Kido}
+     */
     this.app = kidoApp;
+    /**
+     * @constant {string}
+     */
+    this.SERVICE_NAME = "datasources";
+    /**
+     * @type {string}
+     */
     this.name = name;
+    /**
+     * @type {Object}
+     * @private
+     */
     this._defaults = {};
+    /**
+     * @type {boolean}
+     */
     this.caching = caching || false;
 
-    /** methods **/
 
+    /**
+     * Sets default options.
+     *
+     * @param opts
+     * @returns {KidoDatasource}
+     */
     this.defaults = function (opts) {
         self._defaults = $.extend(self._defaults, opts || {});
         return self;
     };
 
+    /**
+     * Queries a data source.
+     *
+     * @param {Object} opts
+     * @param {number} timeout
+     * @returns {*}
+     */
     this.query = function (opts, timeout) {
         if (!timeout && $.isNumeric(opts)) {
             timeout = opts;
@@ -1292,8 +1424,14 @@ var KidoDatasource = function (kidoApp, name, caching) {
         return result;
     };
 
+    /**
+     * Invokes a data source method.
+     *
+     * @param {Object} opts
+     * @param {number} timeout
+     * @returns {*}
+     */
     this.invoke = function (opts, timeout) {
-        // $.isNumeric requires jQuery 1.7+
         if (!timeout && $.isNumeric(opts)) {
             timeout = opts;
             opts = null;
@@ -1327,8 +1465,8 @@ var KidoDatasource = function (kidoApp, name, caching) {
 /**
  * Retrieves an instance of KidoDatasource.
  *
- * @param name {string}
- * @param [caching=false] {boolean}
+ * @param {string} name
+ * @param {boolean} [caching=false]
  * @returns {KidoDatasource}
  */
 Kido.prototype.datasources = function (name, caching) {
@@ -1350,14 +1488,17 @@ var KidoLocalStorage = function (kidoApp) {
     if (!localforage) throw "KidoLocalStorage needs Mozilla LocalForage to be able to work.";
 
     /**
-     * @type {Kido}
-     */
-    this.app = kidoApp;
-
-    /**
      * @type {KidoLocalStorage}
      */
     var self = this;
+    /**
+     * @type {Kido}
+     */
+    this.app = kidoApp;
+    /**
+     * @constant {string}
+     */
+    this.SERVICE_NAME = "localstorage";
 
     /** Local Forage configuration and helper methods **/
     localforage.config({
@@ -1371,7 +1512,7 @@ var KidoLocalStorage = function (kidoApp) {
      * Local Forage setItem method with jQuery deferred interface.
      *
      * @param {string} key
-     * @param {object} value
+     * @param {Object} value
      * @returns {*}
      */
     localforage.setItemAsync = function (key, value) {
@@ -1470,7 +1611,7 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
     };
 
     /**
-     * @param {object} new_val
+     * @param {Object} new_val
      * @returns {*}
      * @api private
      */
@@ -1485,7 +1626,7 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
     };
 
     /**
-     * @param {object} new_val
+     * @param {Object} new_val
      * @returns {*}
      * @api private
      */
@@ -1524,7 +1665,7 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
     /**
      * Persists an object or array in Local Storage.
      *
-     * @param {object} new_val
+     * @param {Object} new_val
      * @returns {*}
      * @api public
      */
@@ -1573,7 +1714,7 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
     /**
      * Retrieves an array of matching objects from Local Storage.
      *
-     * @param {object} [query=]
+     * @param {Object} [query=]
      * @returns {*}
      * @api public
      */
@@ -1636,7 +1777,7 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
 };
 
 /**
- * Retrieves an instance of KidoLocalStorage.
+ * Retrieves a singleton instance of KidoLocalStorage.
  *
  * @returns {KidoLocalStorage}
  */
@@ -1668,7 +1809,7 @@ var KidoOffline = function (kidoApp) {
      */
     var self = this,
         /**
-         * @type {object}
+         * @type {Object}
          */
         services_caching_config = {
             storage: true,
@@ -1773,7 +1914,7 @@ var KidoOffline = function (kidoApp) {
      * Adds a request to the pending queue.
      *
      * @param {string} object_id
-     * @param {object} request
+     * @param {Object} request
      * @returns {*}
      * @api private
      */
@@ -1850,8 +1991,8 @@ var KidoOffline = function (kidoApp) {
     };
 
     /**
-     * @param {object} req
-     * @param {object} res
+     * @param {Object} req
+     * @param {Object} res
      * @returns {*}
      * @api private
      */
@@ -1906,7 +2047,7 @@ var KidoOffline = function (kidoApp) {
     /**
      * Executes ajax requests or stores it in a queue if it fails
      *
-     * @param {object} settings
+     * @param {Object} settings
      * @returns {*}
      * @api public
      */
@@ -2027,7 +2168,7 @@ var KidoOffline = function (kidoApp) {
 };
 
 /**
- * Retrieves an instance of KidoOffline.
+ * Retrieves a singleton instance of KidoOffline.
  *
  * @returns {KidoOffline}
  */
@@ -2103,5 +2244,4 @@ self.doesConnectionExist = function () {
             data: "Worker did not detect connection :("
         });
     }
-};
-*/
+};*/
