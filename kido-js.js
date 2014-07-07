@@ -61,7 +61,7 @@ var Kido = function (name, marketplace) {
      * authenticate to the KidoZen Application using the IDP in the app
      * security configuration.
      * Optional params: user, pass, prov (for active auth)
-     * @api public
+     * @public
      */
     this.authenticate = function () {
         if (self.hosted) return $.Deferred().reject("No need to authenticate to this Web App");
@@ -86,7 +86,7 @@ var Kido = function (name, marketplace) {
     /**
      * send an http request to kidozen.
      * @param {Object} settings - settings as in jQuery.ajax settings.
-     * @api private.
+     * @private
      */
     this.send = function (settings) {
         //validate request
@@ -132,7 +132,7 @@ var Kido = function (name, marketplace) {
      *
      * @param url {string}      - url for GET.
      * @param settings {Object} - optional settings as in $.ajax settings.
-     * @api private
+     * @private
      */
     this.get = function (url, settings) {
         settings = $.extend({ url: url, type: "GET"}, settings || {});
@@ -145,8 +145,8 @@ var Kido = function (name, marketplace) {
      *
      * @param url {string}
      * @param data {Object}     - data to POST in the http body.
-     * @param settings {Object} - optional settings as in $.ajax. settings.
-     * @api private.
+     * @param settings {Object} - optional settings as in $.ajax settings.
+     * @private
      */
     this.post = function (url, data, settings) {
         settings = $.extend({
@@ -161,7 +161,7 @@ var Kido = function (name, marketplace) {
      * make a DELETE http request to kidozen.
      * @param url {string}      - url for GET.
      * @param settings {Object} - optional settings as in $.ajax settings.
-     * @api private
+     * @private
      */
     this.del = function (url, settings) {
         settings = $.extend({url: url, type: "DELETE"}, settings || {});
@@ -173,12 +173,12 @@ var Kido = function (name, marketplace) {
     /**
      * Executes an HTTP request
      * @param {Object} settings
-     * @returns {*}
-     * @api private
+     * @returns {Deferred}
+     * @private
      */
     function executeAjaxRequest(settings) {
         // Check if caching is not enabled
-        if (typeof settings.kidoService === 'undefined' || !settings.kidoService.caching) {
+        if (typeof settings.kidoService === 'undefined' || (!settings.kidoService.caching && !settings.kidoService.queueing)) {
             return $.ajax(settings);
         }
         return self.offline().ajax(settings);
@@ -186,7 +186,7 @@ var Kido = function (name, marketplace) {
 
     /**
      * Ws-Trust strategy for authentication
-     * @api private
+     * @private
      */
     function wsTrustToken(opts) {
         var template = '<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:a="http://www.w3.org/2005/08/addressing" xmlns:u="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"><s:Header><a:Action s:mustUnderstand="1">http://docs.oasis-open.org/ws-sx/ws-trust/200512/RST/Issue</a:Action><a:To s:mustUnderstand="1">[To]</a:To><o:Security s:mustUnderstand="1" xmlns:o="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><o:UsernameToken u:Id="uuid-6a13a244-dac6-42c1-84c5-cbb345b0c4c4-1"><o:Username>[Username]</o:Username><o:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">[Password]</o:Password></o:UsernameToken></o:Security></s:Header><s:Body><trust:RequestSecurityToken xmlns:trust="http://docs.oasis-open.org/ws-sx/ws-trust/200512"><wsp:AppliesTo xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy"><a:EndpointReference><a:Address>[ApplyTo]</a:Address></a:EndpointReference></wsp:AppliesTo><trust:KeyType>http://docs.oasis-open.org/ws-sx/ws-trust/200512/Bearer</trust:KeyType><trust:RequestType>http://docs.oasis-open.org/ws-sx/ws-trust/200512/Issue</trust:RequestType><trust:TokenType>urn:oasis:names:tc:SAML:2.0:assertion</trust:TokenType></trust:RequestSecurityToken></s:Body></s:Envelope>';
@@ -208,7 +208,7 @@ var Kido = function (name, marketplace) {
 
     /**
      * wrapv0.9 strategy for authentication
-     * @api private
+     * @private
      */
     function wrapToken(opts) {
         var form = {
@@ -226,7 +226,7 @@ var Kido = function (name, marketplace) {
 
     /**
      * InAppBrowser authentication
-     * @api private
+     * @private
      */
     function passiveAuth(config) {
         if (!config.signInUrl) {
@@ -259,7 +259,7 @@ var Kido = function (name, marketplace) {
 
     /**
      * Form based authentication
-     * @api private
+     * @private
      */
     function activeAuth(config, user, pass, prov, ip) {
         var getToken;
@@ -305,7 +305,7 @@ var Kido = function (name, marketplace) {
 
     /**
      * Process the token and modifies expiration time
-     * @api private
+     * @private
      */
     function processToken(token) {
         // rawToken is verified for backwards compatibility
@@ -673,7 +673,7 @@ var KidoNotifications = function (kidoApp) {
      * @param {string} subscriptionId is the platform specific id of push
      *                 notification's service registration.
      * @param {string} platform "gcm" | "apns" | "c2dm" | "mpns" | "wns"
-     * @api public
+     * @public
      */
     this.subscribe = function (deviceId, channel, subscriptionId, platform) {
 
@@ -889,14 +889,16 @@ Kido.prototype.security = function () {
 /**
  * Access to the Sms backend service.
  *
- * @param kidoApp {Kido} - instance of the Kido class.
+ * @param {Kido} kidoApp - instance of the Kido class.
+ * @param {{queueing: boolean}} [options=]
  * @returns {KidoSms}
  * @constructor
  */
-var KidoSms = function (kidoApp) {
+var KidoSms = function (kidoApp, options) {
 
     if (!(this instanceof KidoSms)) return new KidoSms(kidoApp);
     if (!kidoApp) throw "The 'kidoApp' argument is required by the KidoSms class.";
+    if (!options) options = { queueing: false };
 
     /**
      * @type {KidoSms}
@@ -909,16 +911,33 @@ var KidoSms = function (kidoApp) {
     /**
      * @constant {string}
      */
-    this.SERVICE_NAME = "security";
+    this.SERVICE_NAME = "sms";
+    /**
+     * @type {boolean}
+     */
+    this.caching = false;
+    /**
+     * @type {boolean}
+     */
+    this.queueing = options.queueing || false;
 
     this.send = function (to, message) {
         if (!to) throw "The 'to' argument is required to send an sms.";
         if (!message) throw "The 'message' argument is required to send an sms.";
 
-        return self.app.send({
+        var settings = {
             url: "/sms?to=" + encodeURIComponent(to) + "&message=" + encodeURIComponent(message),
             type: "POST"
-        });
+        };
+
+        // Offline configuration
+        settings.kidoService = {
+            service: self.SERVICE_NAME,
+            caching: self.caching,
+            queueing: self.queueing
+        };
+
+        return self.app.send(settings);
     };
 
     this.getStatus = function (messageId) {
@@ -930,10 +949,11 @@ var KidoSms = function (kidoApp) {
 /**
  * Retrieves a singleton instance of KidoSms.
  *
+ * @param {{queueing: boolean}} [options=]
  * @returns {KidoSms}
  */
-Kido.prototype.sms = function () {
-    if (!this._sms) this._sms = new KidoSms(this);
+Kido.prototype.sms = function (options) {
+    if (!this._sms) this._sms = new KidoSms(this, options);
     return this._sms;
 };
 
@@ -970,8 +990,8 @@ var KidoStorage = function (kidoApp) {
     /**
      * Retrieves the names of the object sets
      *
-     * @returns {*}
-     * @api public
+     * @returns {Deferred}
+     * @public
      */
     this.getObjectSetNames = function () {
         return self.app.get(self.rootUrl);
@@ -981,27 +1001,27 @@ var KidoStorage = function (kidoApp) {
      * Retrieves an object set with given name.
      *
      * @param {string} name
-     * @param {boolean} [caching=false]
+     * @param {{caching: boolean, queueing: boolean}} [options={}]
      * @returns {KidoObjectSet}
-     * @api public
+     * @public
      */
-    this.objectSet = function (name, caching) {
-        return new KidoObjectSet(name, this, caching);
+    this.objectSet = function (name, options) {
+        return new KidoObjectSet(name, this, options);
     };
 };
 
 /**
  * @param {string} name
  * @param {KidoStorage} parentStorage
- * @param {boolean} [caching=false]
+ * @param {{caching: boolean, queueing: boolean}} [options={}]
  * @returns {KidoObjectSet}
  * @constructor
  */
-var KidoObjectSet = function (name, parentStorage, caching) {
+var KidoObjectSet = function (name, parentStorage, options) {
 
-    /** Validations **/
     if (!(this instanceof KidoObjectSet)) return new KidoObjectSet(name, parentStorage);
     if (!parentStorage) throw "KidoObjectSet needs a parent KidoStorage object.";
+    if (!options) options = { caching: false, queueing: false };
 
     /**
      * @type {KidoObjectSet}
@@ -1022,11 +1042,18 @@ var KidoObjectSet = function (name, parentStorage, caching) {
     /**
      * @type {boolean}
      */
-    this.caching = caching || false;
+    this.caching = options.caching || false;
+    /**
+     * @type {boolean}
+     */
+    this.queueing = options.queueing || false;
 
     /**
-     * invoke an operation on an object set
-     * @api private
+     * Invokes an operation on an object set.
+     *
+     * @param {Object} data
+     * @returns {Deferred}
+     * @private
      */
     this.invoke = function (data) {
 
@@ -1054,19 +1081,20 @@ var KidoObjectSet = function (name, parentStorage, caching) {
             collection: self.name,
             objectId: data.objectId,
             query: data.query,
-            caching: self.caching
+            caching: self.caching,
+            queueing: self.queueing
         };
 
         return self.storage.app.send(data.settings);
     };
 
     /**
-     * inserts an object in the KidoZen Object Storage backend service.
+     * Inserts an object in the KidoZen Object Storage backend service.
      *
-     * @param obj {Object}        - the object to store.
-     * @param isPrivate {boolean} - whether the object is private for that
-     *                              user.
-     * @api public
+     * @param {Object} obj                - the object to store.
+     * @param {boolean} [isPrivate=false] - whether the object is private for that user.
+     * @returns {Deferred}
+     * @public
      */
     this.insert = function (obj, isPrivate) {
 
@@ -1099,9 +1127,13 @@ var KidoObjectSet = function (name, parentStorage, caching) {
 
     /**
      * Updates an existing object, the object instance
-     * must contains the object's key
+     * must contains the object's key.
+     *
+     * @param {Object} obj
+     * @param {boolean} [isPrivate=false]
+     * @returns {Deferred}
+     * @public
      */
-
     this.update = function (obj, isPrivate) {
 
         if (!obj) throw "obj argument is requiered.";
@@ -1140,11 +1172,13 @@ var KidoObjectSet = function (name, parentStorage, caching) {
      * If the object instance contains the object's key
      * then this function will update it, if the object
      * instance doesn't contain the object's key then this
-     * function will try to insert it
+     * function will try to insert it.
      *
-     * @api public
+     * @param {Object} obj
+     * @param {boolean} [isPrivate=false]
+     * @returns {Deferred}
+     * @public
      */
-
     this.save = function (obj, isPrivate) {
 
         if (!obj) throw "obj argument is requiered.";
@@ -1161,9 +1195,12 @@ var KidoObjectSet = function (name, parentStorage, caching) {
 
 
     /**
-     * Retrieves an object by its key
+     * Retrieves an object by its key.
+     *
+     * @param {string} objectId
+     * @returns {Deferred}
+     * @public
      */
-
     this.get = function (objectId) {
 
         if (!objectId) throw "objectId is required";
@@ -1192,9 +1229,15 @@ var KidoObjectSet = function (name, parentStorage, caching) {
 
 
     /**
-     * Executes the query
+     * Executes the query.
+     *
+     * @param [query=]
+     * @param [fields=]
+     * @param [options=]
+     * @param [cache=]
+     * @returns {Deferred}
+     * @public
      */
-
     this.query = function (query, fields, options, cache) {
         return self.invoke({
             settings: { type: "GET" },
@@ -1207,9 +1250,12 @@ var KidoObjectSet = function (name, parentStorage, caching) {
 
 
     /**
-     * Delete an object from the set by its key
+     * Delete an object from the set by its key.
+     *
+     * @param {string} objectId
+     * @returns {Deferred}
+     * @public
      */
-
     this.del = function (objectId) {
         return self.invoke({
             settings: { type: "DELETE", dataType: 'text' },
@@ -1219,9 +1265,11 @@ var KidoObjectSet = function (name, parentStorage, caching) {
 
 
     /**
-     * drops the entire object set.
+     * Drops the entire object set.
+     *
+     * @returns {Deferred}
+     * @public
      */
-
     this.drop = function () {
         return self.invoke({
             settings: { type: "DELETE", dataType: 'text' }
@@ -1377,11 +1425,27 @@ var KidoService = function (kidoApp, name) {
      */
     this.SERVICE_NAME = "services";
 
+    /**
+     * Sets default options.
+     *
+     * @param {Object} opts
+     * @returns {KidoService}
+     * @public
+     */
     this.defaults = function (opts) {
         self._defaults = $.extend(self._defaults, opts || {});
         return self;
     };
 
+    /**
+     * Invokes a configured Enterprice API Service method.
+     *
+     * @param {string} name
+     * @param {Object} [opts={}]
+     * @param {number} [timeout=]
+     * @returns {Deferred}
+     * @public
+     */
     this.invoke = function (name, opts, timeout) {
         var result = $.Deferred();
         var args = $.extend({}, self._defaults, opts);
@@ -1416,15 +1480,16 @@ Kido.prototype.services = function (name) {
  *
  * @param kidoApp {Kido} - instance of the Kido class.
  * @param name {string}
- * @param [caching=false] {boolean}
+ * @param {{caching: boolean, queueing: boolean, timeout: number}} [options={}]
  * @returns {KidoDatasource}
  * @constructor
  */
-var KidoDatasource = function (kidoApp, name, caching) {
+var KidoDatasource = function (kidoApp, name, options) {
 
     if (!(this instanceof KidoDatasource)) return new KidoDatasource(kidoApp, name);
     if (!kidoApp) throw "The 'kidoApp' argument is required by the KidoDatasource class.";
     if (!name) throw "The 'name' argument is required by the KidoDatasource class.";
+    if (!options) options = { caching: false, queueing: false, timeout: null };
 
     /**
      * @type {KidoDatasource}
@@ -1450,14 +1515,23 @@ var KidoDatasource = function (kidoApp, name, caching) {
     /**
      * @type {boolean}
      */
-    this.caching = caching || false;
+    this.caching = options.caching || false;
+    /**
+     * @type {boolean}
+     */
+    this.queueing = options.queueing || false;
+    /**
+     * @type {number}
+     */
+    this.timeout = options.timeout || null;
 
 
     /**
      * Sets default options.
      *
-     * @param opts
+     * @param {Object} opts
      * @returns {KidoDatasource}
+     * @public
      */
     this.defaults = function (opts) {
         self._defaults = $.extend(self._defaults, opts || {});
@@ -1465,27 +1539,24 @@ var KidoDatasource = function (kidoApp, name, caching) {
     };
 
     /**
-     * Queries a data source.
+     * Queries a configured Enterprice API Data source.
      *
-     * @param {Object} opts
-     * @param {number} timeout
-     * @returns {*}
+     * @param {Object} [opts={}]
+     * @returns {Deferred}
+     * @public
      */
-    this.query = function (opts, timeout) {
-        if (!timeout && $.isNumeric(opts)) {
-            timeout = opts;
-            opts = null;
-        }
+    this.query = function (opts) {
         var result = $.Deferred();
         var args = $.extend({}, self._defaults, opts);
         var qs = Object.keys(args).length > 0 ? "?" + $.param(args) : "";
-        var settings = timeout ? { headers: { "timeout": timeout } } : {};
+        var settings = self.timeout ? { headers: { "timeout": self.timeout } } : {};
 
         // Offline configuration
         settings.kidoService = {
             service: self.SERVICE_NAME,
             collection: self.name,
-            caching: self.caching
+            caching: self.caching,
+            queueing: self.queueing
         };
 
         self.app
@@ -1503,26 +1574,23 @@ var KidoDatasource = function (kidoApp, name, caching) {
     };
 
     /**
-     * Invokes a data source method.
+     * Invokes a configured Enterprice API Data source method.
      *
-     * @param {Object} opts
-     * @param {number} timeout
-     * @returns {*}
+     * @param {Object} [opts={}]
+     * @returns {Deferred}
+     * @public
      */
-    this.invoke = function (opts, timeout) {
-        if (!timeout && $.isNumeric(opts)) {
-            timeout = opts;
-            opts = null;
-        }
+    this.invoke = function (opts) {
         var result = $.Deferred();
         var args = $.extend({}, self._defaults, opts);
-        var settings = timeout ? { headers: { "timeout": timeout } } : {};
+        var settings = self.timeout ? { headers: { "timeout": self.timeout } } : {};
 
         // Offline configuration
         settings.kidoService = {
             service: self.SERVICE_NAME,
             collection: self.name,
-            caching: self.caching
+            caching: self.caching,
+            queueing: self.queueing
         };
 
         self.app
@@ -1544,11 +1612,11 @@ var KidoDatasource = function (kidoApp, name, caching) {
  * Retrieves an instance of KidoDatasource.
  *
  * @param {string} name
- * @param {boolean} [caching=false]
+ * @param {{caching: boolean, queueing: boolean, timeout: number}} [options={}]
  * @returns {KidoDatasource}
  */
-Kido.prototype.datasources = function (name, caching) {
-    return new KidoDatasource(this, name, caching);
+Kido.prototype.datasources = function (name, options) {
+    return new KidoDatasource(this, name, options);
 };
 
 /**
@@ -1591,7 +1659,7 @@ var KidoLocalStorage = function (kidoApp) {
      *
      * @param {string} key
      * @param {Object} value
-     * @returns {*}
+     * @returns {Deferred}
      */
     localforage.setItemAsync = function (key, value) {
         var deferred = $.Deferred();
@@ -1609,7 +1677,7 @@ var KidoLocalStorage = function (kidoApp) {
      * Local Forage getItem method with jQuery deferred interface.
      *
      * @param {string} key
-     * @returns {*}
+     * @returns {Deferred}
      */
     localforage.getItemAsync = function (key) {
         var deferred = $.Deferred();
@@ -1627,7 +1695,7 @@ var KidoLocalStorage = function (kidoApp) {
      * Local Forage removeItem method with jQuery deferred interface.
      *
      * @param {string} key
-     * @returns {*}
+     * @returns {Deferred}
      */
     localforage.removeItemAsync = function (key) {
         var deferred = $.Deferred();
@@ -1644,7 +1712,7 @@ var KidoLocalStorage = function (kidoApp) {
      *
      * @param {string} name
      * @returns {KidoLocalStorageCollection}
-     * @api public
+     * @public
      */
     this.collection = function (name) {
         return new KidoLocalStorageCollection(name, this);
@@ -1681,8 +1749,8 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
 
     /**
      * @param {object[]} values
-     * @returns {*}
-     * @api private
+     * @returns {Deferred}
+     * @private
      */
     this.storeCollection = function (values) {
         return localforage.setItemAsync(self.name, values);
@@ -1690,8 +1758,8 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
 
     /**
      * @param {Object} new_val
-     * @returns {*}
-     * @api private
+     * @returns {Deferred}
+     * @private
      */
     this.insertItem = function (new_val) {
         new_val._id = ($.now() * -1).toString();
@@ -1705,8 +1773,8 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
 
     /**
      * @param {Object} new_val
-     * @returns {*}
-     * @api private
+     * @returns {Deferred}
+     * @private
      */
     this.updateItem = function (new_val) {
         return self.query().then(function (values) {
@@ -1744,8 +1812,8 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
      * Persists an object or array in Local Storage.
      *
      * @param {Object} new_val
-     * @returns {*}
-     * @api public
+     * @returns {Deferred}
+     * @public
      */
     this.persist = function (new_val) {
         if (!new_val) throw "The 'new_val' argument is required in order to insert.";
@@ -1765,8 +1833,8 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
      *
      * @param id
      * @param {boolean} [from_dictionary=false]
-     * @returns {*}
-     * @api public
+     * @returns {Deferred}
+     * @public
      */
     this.get = function (id, from_dictionary) {
         if (!id) throw "The 'id' argument is required in order to get.";
@@ -1793,8 +1861,8 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
      * Retrieves an array of matching objects from Local Storage.
      *
      * @param {Object} [query=]
-     * @returns {*}
-     * @api public
+     * @returns {Deferred}
+     * @public
      */
     this.query = function (query) {
         return localforage.getItemAsync(self.name).then(function (values) {
@@ -1817,8 +1885,8 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
      * Deletes an object from Local Storage by its key.
      *
      * @param id
-     * @returns {*}
-     * @api public
+     * @returns {Deferred}
+     * @public
      */
     this.del = function (id) {
         if (!id) throw "The 'id' argument is required in order to delete.";
@@ -1834,8 +1902,8 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
     /**
      * Drops the entire collection from Local Storage.
      *
-     * @returns {*}
-     * @api public
+     * @returns {Deferred}
+     * @public
      */
     this.drop = function () {
         return localforage.removeItemAsync(self.name);
@@ -1844,8 +1912,8 @@ var KidoLocalStorageCollection = function (name, parentLocalStorage) {
     /**
      * Retrieves the quantity of stored items
      *
-     * @returns {*}
-     * @api public
+     * @returns {Deferred}
+     * @public
      */
     this.length = function () {
         return self.query().then(function (values) {
@@ -1881,18 +1949,14 @@ var KidoOffline = function (kidoApp) {
      * @type {Kido}
      */
     this.app = kidoApp;
-
+    /**
+     * @constant {string}
+     */
+    this.SERVICE_NAME = "offline";
     /**
      * @type {KidoOffline}
      */
     var self = this,
-        /**
-         * @type {Object}
-         */
-        services_caching_config = {
-            storage: true,
-            datasources: false
-        },
         /**
          * @type {Worker}
          */
@@ -1933,7 +1997,7 @@ var KidoOffline = function (kidoApp) {
     /**
      * Starts web worker which checks if there is internet connection.
      *
-     * @api private
+     * @private
      */
     this.startCheckingConnectivity = function () {
         if (!worker) {
@@ -1993,8 +2057,8 @@ var KidoOffline = function (kidoApp) {
      *
      * @param {string} object_id
      * @param {Object} request
-     * @returns {*}
-     * @api private
+     * @returns {Deferred}
+     * @private
      */
     this.addPendingRequest = function (object_id, request) {
         return pending_requests.persist({
@@ -2007,8 +2071,8 @@ var KidoOffline = function (kidoApp) {
      * Removes a request from the pending queue.
      *
      * @param {string} object_id
-     * @returns {*}
-     * @api private
+     * @returns {Deferred}
+     * @private
      */
     this.removePendingRequest = function (object_id) {
         return pending_requests.del(object_id);
@@ -2018,8 +2082,8 @@ var KidoOffline = function (kidoApp) {
      * Retrieves the request data by its key.
      *
      * @param {string} object_id
-     * @returns {*}
-     * @api private
+     * @returns {Deferred}
+     * @private
      */
     this.getPendingRequestObject = function (object_id) {
         return pending_requests.get(object_id, true).then(function (req) {
@@ -2030,8 +2094,8 @@ var KidoOffline = function (kidoApp) {
     /**
      * Executes the requests stored in the pending requests queue.
      *
-     * @returns {*}
-     * @api private
+     * @returns {Deferred}
+     * @private
      */
     this.executePendingRequests = function () {
         if (executingPendingTasks) return $.Deferred().reject();
@@ -2053,8 +2117,8 @@ var KidoOffline = function (kidoApp) {
 
     /**
      * @param {object[]} reqs
-     * @returns {*}
-     * @api private
+     * @returns {Deferred}
+     * @private
      */
     this.makeAjaxCall = function (reqs) {
         if (reqs.length === 0) return $.Deferred().resolve();
@@ -2071,8 +2135,8 @@ var KidoOffline = function (kidoApp) {
     /**
      * @param {Object} req
      * @param {Object} res
-     * @returns {*}
-     * @api private
+     * @returns {Deferred}
+     * @private
      */
     this.persistChange = function (req, res) {
         var col = self.app.localStorage().collection(req.request.kidoService.service + '.' + req.request.kidoService.collection),
@@ -2113,8 +2177,8 @@ var KidoOffline = function (kidoApp) {
      * Returns a relation between the old object id and the new one.
      *
      * @param {string} old_id
-     * @returns {*}
-     * @api public
+     * @returns {Deferred}
+     * @public
      */
     this.getNewIdFromDictionary = function (old_id) {
         return dictionary.get(old_id, true).then(function (item) {
@@ -2126,8 +2190,8 @@ var KidoOffline = function (kidoApp) {
      * Executes ajax requests or stores it in a queue if it fails
      *
      * @param {Object} settings
-     * @returns {*}
-     * @api public
+     * @returns {Deferred}
+     * @public
      */
     this.ajax = function (settings) {
         var data = settings.data,
@@ -2135,6 +2199,8 @@ var KidoOffline = function (kidoApp) {
             name = settings.kidoService.collection,
             objectId = settings.kidoService.objectId,
             query = settings.kidoService.query,
+            caching = settings.kidoService.caching,
+            queueing = settings.kidoService.queueing,
             method = settings.type.toLowerCase(),
             getOne = (method === 'get' && objectId),
             getAll = (method === 'get' && !objectId),
@@ -2142,28 +2208,11 @@ var KidoOffline = function (kidoApp) {
             update = (method === 'put' && data),
             remove = (method === 'delete' && objectId),
             drop = (method === 'delete' && !objectId),
-            deferred = $.Deferred(),
-            request;
+            request = $.ajax(settings),
+            deferred = $.Deferred();
 
-        if (!services_caching_config[service]) {
-            // Only cache requests
-            request = $.ajax(settings);
-            request.fail(function (err) {
-                if (err.status !== 0) return deferred.reject(err);
-                self.startCheckingConnectivity();
-                // May be, it'd be better to reject with a custom message and sending the result anyway.
-                // So that, the developer can notify their users that they are working offline.
-                if (!getOne && !getAll) {
-                    var id = ($.now() * -1).toString();
-                    self.addPendingRequest(id, settings).then(function () {
-                        deferred.reject(err);
-                    });
-                } else {
-                    deferred.reject(err);
-                }
-            });
-        } else {
-            // Cache requests and data
+        if (caching) {
+            // Client-side caching is enabled
             var collection = self.app.localStorage().collection(service + '.' + name),
                 object = data ? JSON.parse(data) : null,
                 old_id = object ? object._id : null,
@@ -2189,7 +2238,6 @@ var KidoOffline = function (kidoApp) {
                 }
             }
 
-            request = $.ajax(settings);
             if (getOne || getAll) {
                 request.then(function (val) {
                     return collection.persist(val);
@@ -2209,13 +2257,28 @@ var KidoOffline = function (kidoApp) {
                     return collection.drop();
                 });
             }
-            request.fail(function (err) {
-                if (err.status !== 0) return deferred.reject(err);
-                self.startCheckingConnectivity();
-                // May be, it'd be better to reject with a custom message and sending the result anyway.
-                // So that, the developer can notify their users that they are working offline.
+        }
+
+        request.fail(function (err) {
+            if (err.status !== 0) return deferred.reject(err);
+            self.startCheckingConnectivity();
+            // May be, it'd be better to reject with a custom message and sending the result anyway.
+            // So that, the developer can notify their users that they are working offline.
+            if (queueing && !caching) {
+                // Only queueing requests
+                if (!getOne && !getAll) {
+                    var id = ($.now() * -1).toString();
+                    self.addPendingRequest(id, settings).then(function () {
+                        deferred.reject(err);
+                    });
+                } else {
+                    deferred.reject(err);
+                }
+            } else if (caching) {
+                // Caching data
                 var success = function (val) {
-                    if (insert || update || remove || drop) {
+                    if (queueing && (insert || update || remove || drop)) {
+                        // Queueing requests
                         var id = drop ? ($.now() * -1).toString() : (remove ? objectId : (update ? old_id : val._id));
                         self.addPendingRequest(id, settings).then(function () {
                             deferred.resolve(val);
@@ -2235,11 +2298,15 @@ var KidoOffline = function (kidoApp) {
                 } else if (drop) {
                     collection.drop().then(success);
                 }
-            });
-        }
+            } else {
+                deferred.reject(err);
+            }
+        });
+
         request.done(function (val) {
             deferred.resolve(val);
         });
+
         return deferred.promise();
     };
 

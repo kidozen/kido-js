@@ -289,7 +289,7 @@ describe("kido storage", function () {
     it("should cache inserted result", function (done) {
         var object = { title: 'test', desc: 'this is a test', completed: false },
             kido = new Kido(),
-            objectSet = kido.storage().objectSet('should-cache-insertion', true),
+            objectSet = kido.storage().objectSet('should-cache-insertion', { caching: true, queueing: true }),
             collection = kido.localStorage().collection('storage.should-cache-insertion');
         collection.drop().then(function () {
             return objectSet.insert(object);

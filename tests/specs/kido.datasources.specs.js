@@ -30,9 +30,9 @@ describe("kido datasources", function () {
             });
     });
 
-    it("should invoke an operation with caching enabled", function (done) {
+    it("should invoke an operation with caching and queueing enabled", function (done) {
         new Kido()
-            .datasources("test-operation", true)
+            .datasources("test-operation", { caching: true, queueing: true })
             .invoke()
             .done(function (data) {
                 expect(data).to.be.ok();
@@ -76,8 +76,8 @@ describe("kido datasources", function () {
 
     it("should support querying a datasource with a timeout", function (done) {
         new Kido()
-            .datasources("test-query")
-            .query(10)
+            .datasources("test-query", { timeout: 10 })
+            .query()
             .done(function (data) {
                 expect(data.status).to.be.equal(200);
                 done();
@@ -89,8 +89,8 @@ describe("kido datasources", function () {
 
     it("should support invoking an operation ds with a timeout", function (done) {
         new Kido()
-            .datasources("test-operation")
-            .invoke(20)
+            .datasources("test-operation", { timeout: 20 })
+            .invoke()
             .done(function (data) {
                 expect(data.status).to.be.equal(200);
                 done();
@@ -102,7 +102,7 @@ describe("kido datasources", function () {
 
     it("should support querying a datasource with args", function (done) {
         new Kido()
-            .datasources("test-query")
+            .datasources("test-query", { timeout: 10 })
             .query(
             {
                 strParam: "fookey",
@@ -110,8 +110,7 @@ describe("kido datasources", function () {
                 boolParam: true,
                 arrParam: ["a", "b", "c"],
                 numParam: 78.9
-            }
-            , 10)
+            })
             .done(function (data) {
                 expect(data.status).to.be.equal(200);
                 done();
@@ -123,8 +122,8 @@ describe("kido datasources", function () {
 
     it("should support invoking an operation ds with args", function (done) {
         new Kido()
-            .datasources("test-operation")
-            .invoke({strParam: "fookey", objParam: {k1: "v1", k2: 2}, boolParam: true, arrParam: ["a", "b", "c"], numParam: 78.9}, 20)
+            .datasources("test-operation", { timeout: 20 })
+            .invoke({strParam: "fookey", objParam: {k1: "v1", k2: 2}, boolParam: true, arrParam: ["a", "b", "c"], numParam: 78.9})
             .done(function (data) {
                 expect(data.status).to.be.equal(200);
                 done();
@@ -134,10 +133,10 @@ describe("kido datasources", function () {
             });
     });
 
-    it("should support invoking an operation ds with args and caching enabled", function (done) {
+    it("should support invoking an operation ds with args and caching and queueing enabled", function (done) {
         new Kido()
-            .datasources("test-operation", true)
-            .invoke({strParam: "fookey", objParam: {k1: "v1", k2: 2}, boolParam: true, arrParam: ["a", "b", "c"], numParam: 78.9}, 20)
+            .datasources("test-operation", { caching: true, queueing: true, timeout: 20 })
+            .invoke({strParam: "fookey", objParam: {k1: "v1", k2: 2}, boolParam: true, arrParam: ["a", "b", "c"], numParam: 78.9})
             .done(function (data) {
                 expect(data.status).to.be.equal(200);
                 done();
