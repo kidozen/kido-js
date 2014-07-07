@@ -890,7 +890,7 @@ Kido.prototype.security = function () {
  * Access to the Sms backend service.
  *
  * @param {Kido} kidoApp - instance of the Kido class.
- * @param {{queueing: boolean}} [options=]
+ * @param {{queueing: boolean}} [options={}]
  * @returns {KidoSms}
  * @constructor
  */
@@ -921,6 +921,13 @@ var KidoSms = function (kidoApp, options) {
      */
     this.queueing = options.queueing || false;
 
+    /**
+     * Sends a text message to a mobile phone.
+     *
+     * @param {string|number} to
+     * @param {string} message
+     * @returns {Deferred}
+     */
     this.send = function (to, message) {
         if (!to) throw "The 'to' argument is required to send an sms.";
         if (!message) throw "The 'message' argument is required to send an sms.";
@@ -940,6 +947,12 @@ var KidoSms = function (kidoApp, options) {
         return self.app.send(settings);
     };
 
+    /**
+     * Retrieves the status of a message.
+     *
+     * @param {string} messageId
+     * @returns {Deferred}
+     */
     this.getStatus = function (messageId) {
         if (!messageId) throw "The 'messageId' argument is required to get message status";
         return self.app.get("/sms/" + messageId);
@@ -949,7 +962,7 @@ var KidoSms = function (kidoApp, options) {
 /**
  * Retrieves a singleton instance of KidoSms.
  *
- * @param {{queueing: boolean}} [options=]
+ * @param {{queueing: boolean}} [options={}]
  * @returns {KidoSms}
  */
 Kido.prototype.sms = function (options) {
@@ -1556,7 +1569,7 @@ var KidoDatasource = function (kidoApp, name, options) {
             service: self.SERVICE_NAME,
             collection: self.name,
             caching: self.caching,
-            queueing: self.queueing
+            queueing: false
         };
 
         self.app
@@ -1589,7 +1602,7 @@ var KidoDatasource = function (kidoApp, name, options) {
         settings.kidoService = {
             service: self.SERVICE_NAME,
             collection: self.name,
-            caching: self.caching,
+            caching: false,
             queueing: self.queueing
         };
 
