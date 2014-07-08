@@ -2207,6 +2207,7 @@ var KidoOffline = function (kidoApp) {
      * @public
      */
     this.ajax = function (settings) {
+        if (!settings) throw "The 'settings' argument is required.";
         var data = settings.data,
             service = settings.kidoService.service,
             name = settings.kidoService.collection,
