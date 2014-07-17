@@ -64,24 +64,12 @@ describe("kido config", function () {
     it("should delete a value", function (done) {
         var config = new Kido().config();
         // create a temp value foo.
-        config
-            .set("foo", "bar")
-            .fail(doneWithError.bind(done))
-            .done(function () {
-                // delete foo
-                config
-                    .del("foo")
-                    .fail(doneWithError.bind(done))
-                    .done(function () {
-                        // make sure it doesn"t exist anymore
-                        config
-                            .get("foo")
-                            .fail(doneWithError.bind(done))
-                            .done(function (foo) {
-                                expect(foo).to.be.equal(null);
-                                done();
-                            });
-                    });
-            });
+        config.set("foo", "bar").then(function () {
+            // delete foo
+            return config.del("foo");
+        }).done(function (res) {
+            expect(res).to.be.equal("OK");
+            done();
+        }).fail(doneWithError.bind(done));
     });
 });
