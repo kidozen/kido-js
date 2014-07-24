@@ -4,8 +4,9 @@
   "description": "Javascript SDK for kidozen platform.",
   "version": "0.1.6",
   "dependencies": {
+    "kido": "latest",
     "node-minify": "*",
-    "kido":"latest"
+    "phantomjs": "^1.9.7-15"
   },
   "engines": {
     "node": "*"

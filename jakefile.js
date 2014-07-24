@@ -17,8 +17,8 @@ var pkg         = require('./package'),
  */
 
 var async             = {async:true},
-    win               = require('os').platform() == 'win32',
-    phantomjs         = path.join(__dirname, win ? "bin/phantomjs-1.9.0-windows/phantomjs.exe" : "bin/phantomjs-1.9.0-macosx/bin/phantomjs"),
+    phantomjs         = require('phantomjs'),
+    phantomjsPath     = phantomjs.path,
     phantomjsRunner   = path.join(__dirname, 'tests', 'runner.js'),
     jsDir             = path.join(__dirname,"/lib/"),
     fileOut           = path.join(__dirname, 'dist', pkg.name + '.js'),
@@ -200,7 +200,7 @@ var test = function ( output ) {
 
         console.log("Testing url: ", url);
 
-        sp = spawn(phantomjs, [phantomjsRunner, url, output || ''], options);
+        var sp = spawn(phantomjsPath, [phantomjsRunner, url, output || ''], options);
         sp.on('close', function ( code ) {
 
             console.log('');
@@ -251,7 +251,3 @@ var emulate = function ( cb ) {
 
     api.emulate(credentials,app, folder, cb);
 };
-
-
-
-
