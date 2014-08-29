@@ -29,6 +29,8 @@ var Kido = function (name, marketplace) {
         }
     }
 
+    window.isNative = (document.URL.indexOf('http://') === -1 && document.URL.indexOf('https://') === -1);
+
     var self = this;
     var _username = null; // keep the username, password and provider
     var _password = null; // in memory as private variables in order
@@ -237,23 +239,26 @@ var Kido = function (name, marketplace) {
         }
         var deferred = $.Deferred();
         var ref = window.open(config.signInUrl, '_blank', 'location=yes');
-        ref.addEventListener('loadstop', function (event) {
-            ref.executeScript({
-                code: 'document.title;'
-            }, function (values) {
-                var refTitle = values[0];
-                if (refTitle.indexOf('Success payload=') !== -1) {
-                    ref.close();
-                    var token = JSON.parse(window.atob(refTitle.replace('Success payload=', '')));
-                    // rawToken is verified for backwards compatibility
-                    if (!token || (!token.access_token && !token.rawToken)) {
-                        return deferred.reject('Unable to retrieve KidoZen token.');
+        if (window.isNative) {
+            // cordova
+            ref.addEventListener('loadstop', function (event) {
+                ref.executeScript({
+                    code: 'document.title;'
+                }, function (values) {
+                    var refTitle = values[0];
+                    if (refTitle.indexOf('Success payload=') !== -1) {
+                        ref.close();
+                        return processToken(refTitle);
                     }
-                    self.authenticated = true;
-                    deferred.resolve(processToken(token));
-                }
+                    return deferred.reject('Unable to retrieve KidoZen token.');
+                });
             });
-        });
+        } else {
+            // browser
+            window.addEventListener('message', function(event) {
+                return processToken(event.data);
+            }, false);
+        }
         return deferred.promise();
     }
 
@@ -307,8 +312,13 @@ var Kido = function (name, marketplace) {
      * Process the token and modifies expiration time
      * @private
      */
-    function processToken(token) {
+    function processToken(payload) {
+        var token = JSON.parse(window.atob(payload.replace('Success payload=', '')));
         // rawToken is verified for backwards compatibility
+        if (!token || (!token.access_token && !token.rawToken)) {
+            return $.Deferred().reject('Unable to retrieve KidoZen token.');
+        }
+        self.authenticated = true;
         var access_token = token.access_token ? token.access_token : token.rawToken;
         token.token = 'WRAP access_token="' + access_token + '"';
         // parse the token and get the claims and the expiration date.
@@ -324,7 +334,7 @@ var Kido = function (name, marketplace) {
                 break;
             }
         }
-        return token;
+        return $.Deferred().resolve(token);
     }
 
 };
@@ -2010,10 +2020,6 @@ var KidoOffline = function (kidoApp) {
          */
         pending_requests = self.app.localStorage().collection('pending_requests', this),
         /**
-         * @type {boolean}
-         */
-        isNative = (document.URL.indexOf("http://") == -1),
-        /**
          * @type {URL|*}
          */
         URL = window.URL || window.webkitURL,
@@ -2038,7 +2044,7 @@ var KidoOffline = function (kidoApp) {
     this.startCheckingConnectivity = function () {
         if (!worker) {
             // Check if browser is not able to use Web Workers
-            if (isNative || !URL || !Blob || !Worker) {
+            if (window.isNative || !URL || !Blob || !Worker) {
                 // Create fallback
                 worker = setInterval(function () {
                     console.log('Interval is checking connection...');
