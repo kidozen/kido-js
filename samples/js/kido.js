@@ -29,8 +29,6 @@ var Kido = function (name, marketplace) {
         }
     }
 
-    window.isNative = (document.URL.indexOf('http://') === -1 && document.URL.indexOf('https://') === -1);
-
     var self = this;
     var _username = null; // keep the username, password and provider
     var _password = null; // in memory as private variables in order
@@ -42,6 +40,7 @@ var Kido = function (name, marketplace) {
     this.local = this.name === 'local';
     this.hosted = !marketplace;
     this.authenticated = this.hosted ? true : false;
+    this.isNative = (document.URL.indexOf('http://') === -1 && document.URL.indexOf('https://') === -1);
 
     // get the application security configuration in case of
     // hosted authentication.
@@ -239,7 +238,7 @@ var Kido = function (name, marketplace) {
         }
         var deferred = $.Deferred();
         var ref = window.open(config.signInUrl, '_blank', 'location=yes');
-        if (window.isNative) {
+        if (self.isNative) {
             // cordova
             ref.addEventListener('loadstop', function (event) {
                 ref.executeScript({
@@ -2071,7 +2070,7 @@ var KidoOffline = function (kidoApp) {
     this.startCheckingConnectivity = function () {
         if (!worker) {
             // Check if browser is not able to use Web Workers
-            if (window.isNative || !URL || !Blob || !Worker) {
+            if (self.app.isNative || !URL || !Blob || !Worker) {
                 // Create fallback
                 worker = setInterval(function () {
                     console.log('Interval is checking connection...');

@@ -263,26 +263,21 @@ describe("kido storage", function () {
         var objectSet = new Kido().storage().objectSet('xyz');
         objectSet
             .drop()
-            .always(function () {
-                $
-                    .when(objectSet.insert({name: 'john'}), objectSet.insert({name: 'jake'}))
-                    .fail(function (jqXHR, textStatus, errorThrown) {
-                        done(new Error("Failed with status:" + jqXHR.status + ", responseText:" + jqXHR.responseText + ", textStatus:" + textStatus + ", errorThrown:" + errorThrown));
-                    })
-                    .done(function () {
-                        // query for john.
-                        objectSet
-                            .query({name: 'john'})
-                            .fail(function (jqXHR, textStatus, errorThrown) {
-                                done(new Error("Failed with status:" + jqXHR.status + ", responseText:" + jqXHR.responseText + ", textStatus:" + textStatus + ", errorThrown:" + errorThrown));
-                            })
-                            .done(function (list) {
-                                expect(list).to.be.an('array');
-                                expect(list.length).to.be.equal(1);
-                                expect(list[0].name).to.be.equal('john');
-                                done();
-                            });
-                    });
+            .then(function () {
+                return $.when(objectSet.insert({name: 'john'}), objectSet.insert({name: 'jake'}));
+            })
+            .then(function () {
+                // query for john.
+                return objectSet.query({name: 'john'});
+            })
+            .done(function (list) {
+                expect(list).to.be.an('array');
+                expect(list.length).to.be.equal(1);
+                expect(list[0].name).to.be.equal('john');
+                done();
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                done(new Error("Failed with status:" + jqXHR.status + ", responseText:" + jqXHR.responseText + ", textStatus:" + textStatus + ", errorThrown:" + errorThrown));
             });
     });
 
