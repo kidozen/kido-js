@@ -245,14 +245,16 @@ var Kido = function (name, marketplace) {
                     code: 'document.title;'
                 }, function (values) {
                     var refTitle = values[0];
-                    try {
-                        var token = processTokenForPassiveAuth(refTitle);
-                        self.authenticated = true;
-                        deferred.resolve(token);
-                    } catch (err) {
-                        deferred.reject('Unable to retrieve KidoZen token.');
+                    if (refTitle.indexOf('Success payload=') !== -1) {
+                        try {
+                            var token = processTokenForPassiveAuth(refTitle);
+                            self.authenticated = true;
+                            deferred.resolve(token);
+                        } catch (err) {
+                            deferred.reject('Unable to retrieve KidoZen token.');
+                        }
+                        ref.close();
                     }
-                    ref.close();
                 });
             });
         } else {
