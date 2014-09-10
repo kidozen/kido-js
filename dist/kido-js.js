@@ -21,6 +21,11 @@ var Kido = function (name, marketplace) {
 
     if (!(this instanceof Kido)) return new Kido();
 
+    if (typeof $ === 'undefined') throw "jQuery 1.8 or above is required to use the Kido SDK.";
+    if (typeof $.fn === 'undefined' || typeof $.fn.jquery === 'undefined') throw "Could not determine jQuery version.";
+    var $version = $.fn.jquery.split('.');
+    if (parseInt($version[0]) < 2 && parseInt($version[1]) < 8) throw "jQuery 1.8 or above is required to use the Kido SDK.";
+
     if (typeof marketplace !== 'undefined') {
         if (marketplace.indexOf('://') === -1) {
             marketplace = 'https://' + marketplace;
