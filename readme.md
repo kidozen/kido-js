@@ -8,7 +8,7 @@ You can use the Javascript SDK to build HTML5 Web Applications that run in the K
 
 In order to use the SDK in your web applications you can download the unified and minified versions of the SDK, or you can generate it from the source code. Before you can add the reference to the SDK, you will have to make sure you have this dependencies already reference:
 
-- jQuery
+- jQuery 1.8 or above
 - json2 (optional for older browsers)
 - socket.io (optional for pubsub only)
 
