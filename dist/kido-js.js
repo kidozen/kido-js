@@ -17,7 +17,7 @@ if (!JSON || !JSON.parse || !JSON.stringify) throw "KidoZen requires JSON.string
  * @returns {Kido}
  * @constructor
  */
-var Kido = function (name, marketplace) {
+var Kido = function (name, marketplace, options) {
 
     if (!(this instanceof Kido)) return new Kido();
 
@@ -46,6 +46,13 @@ var Kido = function (name, marketplace) {
     this.hosted = !marketplace;
     this.authenticated = this.hosted ? true : false;
     this.isNative = (document.URL.indexOf('http://') === -1 && document.URL.indexOf('https://') === -1);
+    
+    if (typeof options === 'object' && typeof options.token === 'object') {
+        this.authenticated = true;
+        this.token = function() {
+            return $.Deferred().resolve(options.token);
+        };
+    }
 
     // get the application security configuration in case of
     // hosted authentication.
@@ -261,6 +268,13 @@ var Kido = function (name, marketplace) {
                         ref.close();
                     }
                 });
+            });
+            ref.addEventListener('loaderror', function(event) {
+                deferred.reject('InAppBrowser error loading page.');
+                ref.close();
+            });
+            ref.addEventListener('exit', function(event) {
+                deferred.reject('InAppBrowser has exited.');
             });
         } else {
             // browser
