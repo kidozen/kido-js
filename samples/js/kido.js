@@ -49,6 +49,7 @@ var Kido = function (name, marketplace, options) {
     
     if (typeof options === 'object' && typeof options.token === 'object') {
         this.authenticated = true;
+        this.url = marketplace;
         this.token = function() {
             return $.Deferred().resolve(options.token);
         };
