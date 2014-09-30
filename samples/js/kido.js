@@ -50,7 +50,7 @@ var Kido = function (name, marketplace, options) {
     if (typeof options === 'object' && typeof options.token === 'object') {
         this.authenticated = true;
         this.url = marketplace;
-        this.token = $.Deferred().resolve(options.token);
+        this.token = $.Deferred().resolve(processToken(options.token));
     }
 
     // get the application security configuration in case of
