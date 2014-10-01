@@ -1,4 +1,4 @@
-// KidoZen Javascript SDK v0.1.7.
+// KidoZen Javascript SDK v0.1.8.
 // Copyright (c) 2013 Kidozen, Inc. MIT Licensed
 /**
  * Kido - Kidozen representation of an Application.
