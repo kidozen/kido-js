@@ -142,7 +142,8 @@ var Kido = function (name, marketplace, options) {
                             if (!_secretKey) {
                                 return self.authenticate();
                             }
-                            return self.getConfig.then(function (config) {
+                            var refreshToken = token.refresh_token;
+                            self.token = self.getConfig.then(function (config) {
                                 return $.ajax({
                                     url: config.authConfig.oauthTokenEndpoint,
                                     type: "POST",
@@ -151,10 +152,18 @@ var Kido = function (name, marketplace, options) {
                                         client_id: config.domain,
                                         client_secret: _secretKey,
                                         scope: config.authConfig.applicationScope,
-                                        refresh_token: token.refresh_token
+                                        refresh_token: refreshToken
                                     }
+                                }).then(function(token) {
+                                    if (!token || (!token.access_token && !token.rawToken)) {
+                                        self.authenticated = false;
+                                        return $.Deferred().reject("Unable to retrieve KidoZen token.");
+                                    }
+                                    token.refresh_token = refreshToken;
+                                    return processToken(token);
                                 });
                             });
+                            return self.token;
                         }
                     }
                     return token;
