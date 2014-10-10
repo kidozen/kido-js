@@ -1,4 +1,4 @@
-// KidoZen Javascript SDK v0.1.8.
+// KidoZen Javascript SDK v0.1.9.
 // Copyright (c) 2013 Kidozen, Inc. MIT Licensed
 /**
  * Kido - Kidozen representation of an Application.
@@ -38,6 +38,7 @@ var Kido = function (name, marketplace, options) {
     var _username = null; // keep the username, password and provider
     var _password = null; // in memory as private variables in order
     var _provider = null; // to refresh tokens when they expire.
+    var _secretKey = null;
 
     // initialize properties
     this.name = name || 'local';  // backward compatibility
@@ -62,19 +63,22 @@ var Kido = function (name, marketplace, options) {
         if (typeof options.provider === 'string') {
             _provider = options.provider;
         }
+        if (typeof options.secretKey === 'string') {
+            _secretKey = options.secretKey;
+        }
     }
 
     // get the application security configuration in case of
     // hosted authentication.
     if (!this.hosted) {
-        this.authConfig = $.ajax({
+        this.getConfig = $.ajax({
             url: this.marketplace + "/publicapi/apps?name=" + this.name
         }).then(function (config) {
             if (!config || !config.length) {
                 return $.Deferred().reject("Application configuration not found.");
             }
             self.url = config[0].url.substring(0, config[0].url.length - 1);
-            return config[0].authConfig;
+            return config[0];
         }, function () {
             return $.Deferred().reject("Unable to retrieve application configuration. Either there is no internet connection or the marketplace url is invalid.");
         });
@@ -89,19 +93,19 @@ var Kido = function (name, marketplace, options) {
     this.authenticate = function () {
         if (self.hosted) return $.Deferred().reject("No need to authenticate to this Web App");
         var authArgs = arguments;
-        self.token = self.authConfig.then(function (config) {
+        self.token = self.getConfig.then(function (config) {
             if (authArgs.length === 0) {
-                return passiveAuth(config);
+                return passiveAuth(config.authConfig);
             }
 
-            var ips = config.identityProviders;
+            var ips = config.authConfig.identityProviders;
             var prov = authArgs[2] || Object.keys(ips)[0];
             var ip = ips[prov];
 
             if (!ip) return $.Deferred().reject("Invalid Identity Provider");
             if (!ip.protocol) return $.Deferred().reject("Invalid Identity Provider Protocol");
 
-            return activeAuth(config, authArgs[0], authArgs[1], authArgs[2], ip);
+            return activeAuth(config.authConfig, authArgs[0], authArgs[1], authArgs[2], ip);
         });
         return self.token;
     };
@@ -135,7 +139,22 @@ var Kido = function (name, marketplace, options) {
                         if (_username && _password && _provider) {
                             return self.authenticate(_username, _password, _provider);
                         } else {
-                            return self.authenticate();
+                            if (!_secretKey) {
+                                return self.authenticate();
+                            }
+                            return self.getConfig.then(function (config) {
+                                return $.ajax({
+                                    url: config.authConfig.oauthTokenEndpoint,
+                                    type: "POST",
+                                    data: {
+                                        grant_type: "refresh_token",
+                                        client_id: config.domain,
+                                        client_secret: _secretKey,
+                                        scope: config.authConfig.applicationScope,
+                                        refresh_token: token.refresh_token
+                                    }
+                                });
+                            });
                         }
                     }
                     return token;
@@ -262,7 +281,7 @@ var Kido = function (name, marketplace, options) {
         var ref = window.open(config.signInUrl, '_blank', 'location=yes');
         if (self.isNative) {
             // cordova
-            ref.addEventListener('loadstop', function (event) {
+            ref.addEventListener('loadstop', function () {
                 ref.executeScript({
                     code: 'document.title;'
                 }, function (values) {
@@ -279,11 +298,11 @@ var Kido = function (name, marketplace, options) {
                     }
                 });
             });
-            ref.addEventListener('loaderror', function(event) {
+            ref.addEventListener('loaderror', function() {
                 deferred.reject('InAppBrowser error loading page.');
                 ref.close();
             });
-            ref.addEventListener('exit', function(event) {
+            ref.addEventListener('exit', function() {
                 deferred.reject('InAppBrowser has exited.');
             });
         } else {
@@ -383,12 +402,14 @@ var Kido = function (name, marketplace, options) {
         var claims = tokenData.split("&");
         token.claims = claims;
         for (var i in claims) {
-            var c = claims[i];
-            if (c.indexOf("ExpiresOn") > -1) {
-                // adjust the expiration 20 seconds before it actually
-                // expires so that it doesn't expire due to latency.
-                token.expiresOn = ~~(c.split("=")[1]) * 1000 - 20 * 1000;
-                break;
+            if (claims[i]) {
+                var c = claims[i];
+                if (c.indexOf("ExpiresOn") > -1) {
+                    // adjust the expiration 20 seconds before it actually
+                    // expires so that it doesn't expire due to latency.
+                    token.expiresOn = ~~(c.split("=")[1]) * 1000 - 20 * 1000;
+                    break;
+                }
             }
         }
         return token;
