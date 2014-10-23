@@ -1,4 +1,4 @@
-// KidoZen Javascript SDK v0.1.9.
+// KidoZen Javascript SDK v0.1.10.
 // Copyright (c) 2013 Kidozen, Inc. MIT Licensed
 /**
  * Kido - Kidozen representation of an Application.
@@ -50,9 +50,7 @@ var Kido = function (name, marketplace, options) {
     
     if (typeof options === 'object') {
         if (typeof options.token === 'object') {
-            this.authenticated = true;
-            this.url = marketplace;
-            this.token = $.Deferred().resolve(processToken(options.token));
+            this.inheritedToken = options.token;
         }
         if (typeof options.username === 'string') {
             _username = options.username;
@@ -94,7 +92,10 @@ var Kido = function (name, marketplace, options) {
         if (self.hosted) return $.Deferred().reject("No need to authenticate to this Web App");
         var authArgs = arguments;
         self.token = self.getConfig.then(function (config) {
-            if (authArgs.length === 0) {
+            if (authArgs.length === 0 && self.inheritedToken) {
+                self.authenticated = true;
+                return processToken(self.inheritedToken);
+            } else if (authArgs.length === 0) {
                 return passiveAuth(config.authConfig);
             }
 
