@@ -89,7 +89,7 @@ var Kido = function (name, marketplace, options) {
      * @public
      */
     this.authenticate = function () {
-        if (self.hosted) return $.Deferred().reject("No need to authenticate to this Web App");
+        if (self.hosted) return $.Deferred().resolve("No need to authenticate to this Web App");
         var authArgs = arguments;
         self.token = self.getConfig.then(function (config) {
             if (authArgs.length === 0 && self.inheritedToken) {
