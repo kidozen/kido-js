@@ -996,6 +996,7 @@ var KidoSecurity = function (kidoApp) {
                     var key = item.type.substring(item.type.lastIndexOf('/') + 1);
                     result[key] = item.value;
                 });
+                return result;
             });
     };
 
