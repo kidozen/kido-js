@@ -65,7 +65,8 @@ directory('tmp');
 desc('prepares the copyright for unify and minify');
 task('copyright', ['tmp'], function () {
     var header = "// KidoZen Javascript SDK v" + pkg.version + ".\n" +
-                 "// Copyright (c) 2013 Kidozen, Inc. MIT Licensed";
+                 "// Copyright (c) 2014 Kidozen, Inc. MIT Licensed" + "\n" +
+                 "var KIDO_SDK_VERSION = '" + pkg.version + "';";
     fs.writeFileSync(copyright, header, 'utf8');
 });
 

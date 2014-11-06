@@ -1,5 +1,6 @@
 // KidoZen Javascript SDK v0.1.10.
-// Copyright (c) 2013 Kidozen, Inc. MIT Licensed
+// Copyright (c) 2014 Kidozen, Inc. MIT Licensed
+var KIDO_SDK_VERSION = '0.1.10';
 /**
  * Kido - Kidozen representation of an Application.
  *
@@ -123,7 +124,11 @@ var Kido = function (name, marketplace, options) {
 
         var defaults = {
             type: "POST",
-            cache: true
+            cache: true,
+            headers: {
+                'X-Kido-SDK': 'JS',
+                'X-Kido-SDK-Version': KIDO_SDK_VERSION || 'UNKNOWN'
+            }
         };
 
         var opts = $.extend({}, defaults, settings);
