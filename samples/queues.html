@@ -2,11 +2,11 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title>Kidozen Samples</title>        
-        <meta name="viewport" content="width=device-width, initial-scale=1"> 
+        <title>Kidozen Samples</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
-        <script src="//code.jquery.com/jquery-1.6.4.min.js"></script>
+        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
         <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
     </head>
     <body>
@@ -98,7 +98,7 @@
                     .fail(writeError);
             });
 
-            $(".dequeue-object").click(function () { 
+            $(".dequeue-object").click(function () {
                 queue
                     .dequeue()
                     .done(function ( ret ) {
@@ -125,7 +125,7 @@
                 if($.isPlainObject(message)){
                     if(JSON && JSON.stringify)
                         message = JSON.stringify(message);
-                    else 
+                    else
                         message = message.toString();
                 }
 
@@ -136,5 +136,5 @@
 
             }
         </script>
-    </body>    
+    </body>
 </html>

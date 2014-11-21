@@ -2,11 +2,11 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title>Kidozen Samples</title>        
-        <meta name="viewport" content="width=device-width, initial-scale=1"> 
+        <title>Kidozen Samples</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
-        <script src="//code.jquery.com/jquery-1.6.4.min.js"></script>
+        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
         <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
 
     </head>
@@ -53,7 +53,7 @@
         <script src="/js/kido.js"></script>
 
         <script type="text/javascript">
-        
+
         var config = new Kido().config();
 
         $(".set-new-value").click(function(e){
@@ -82,7 +82,7 @@
         });
 
         $(".get-names").click(function(e){
-            
+
             config
                 .getAll()
                 .done(function(ret){
@@ -95,7 +95,7 @@
         });
 
         $(".delete-value").click(function(e){
-            
+
             config
                 .del("test")
                 .done(function(ret){

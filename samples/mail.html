@@ -2,11 +2,11 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title>Kidozen Samples</title>        
-        <meta name="viewport" content="width=device-width, initial-scale=1"> 
+        <title>Kidozen Samples</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
-        <script src="//code.jquery.com/jquery-1.6.4.min.js"></script>
+        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
         <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
         <style>
             #object {
@@ -17,13 +17,13 @@
     <body>
 
     <div id="storage" data-role="page">
-        
+
         <div data-role="header">
             <h1>Kidozen - Notifications Sample</h1>
             <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
         </div>
 
-        <div data-role="content">   
+        <div data-role="content">
             <form id="sendForm">
                 <h3>Send email</h3>
                 <div data-role="fieldcontain">
@@ -57,7 +57,7 @@
 
     <!-- KIDOZEN SDK -->
     <script src="/js/kido.js"></script>
-    
+
     <script type="text/javascript">
         $(document).ready(function() {
 
@@ -68,7 +68,7 @@
                 e.stopPropagation();
 
                 $("#log").empty();
-            });         
+            });
 
             $("#sendMail").click(function(e) {
                 e.preventDefault();
@@ -80,23 +80,23 @@
                     subject: $("#subject").val(),
                     bodyText: $("#bodyText").val(),
                     bodyHtml: $("#bodyHtml").val()
-                }; 
+                };
 
                 if ($("#attachment").val()) {
-                    
+
                     email
                         .attach($("#attachment")[0].files[0])
                         .done(function (attachments) {
                             mail.attachments = attachments;
                             return email.send(mail);
-                        }) 
+                        })
                         .done(function() {
                             alert('email sent');
                         })
                         .fail(function() {
                             alert('email not sent.');
                         });
-                
+
                 } else {
 
                     email

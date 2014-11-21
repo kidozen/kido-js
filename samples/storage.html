@@ -2,11 +2,11 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title>Kidozen Samples</title>        
-        <meta name="viewport" content="width=device-width, initial-scale=1"> 
+        <title>Kidozen Samples</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
-        <script src="//code.jquery.com/jquery-1.6.4.min.js"></script>
+        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
         <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
         <style>
             #object {
@@ -17,14 +17,14 @@
     <body>
 
     <div id="storage" data-role="page">
-        
+
         <div data-role="header">
             <h1>Kidozen - Storage Samples</h1>
             <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
         </div>
 
         <div data-role="content">
-            
+
             <div data-role="fieldcontain">
               <label for="objSetName">Object set name:</label>
               <input type="text" name="objSetName" id="objSetName" value="" placeholder="Object set name"/>
@@ -32,14 +32,14 @@
 
             <div data-role="collapsible" data-theme="b" data-content-theme="c">
               <h3>Manipulate an object</h3>
-                
+
               <div data-role="fieldcontain">
                   <label for="sampleObj">Object:</label>
                   <textarea id="sampleObj" rows="6" cols="80">
                   {
                       "firstName": "Tom",
                       "lastName": "Jenkins",
-                      "open": true    
+                      "open": true
                   }
                   </textarea>
               </div>
@@ -49,7 +49,7 @@
                   <a data-role="button" class="update-object">Update</a>
                   <a data-role="button" class="delete-object">Delete</a>
                </div>
-               
+
             </div>
 
             <div data-role="collapsible" data-theme="b" data-content-theme="c">
@@ -86,7 +86,7 @@
 
     <!-- KIDOZEN SDK -->
     <script src="/js/kido.js"></script>
-    
+
     <script type="text/javascript">
 
     var storage = new Kido().storage();
@@ -95,17 +95,17 @@
         //ie: return new Kido().storage().objectSet('sample');
         return storage.objectSet($("#objSetName").val() || 'sample');
     };
-        
+
     $("#clearConfirmation").click(function(e){
 
         $("#confirmationLog").empty();
-        
+
     });
 
     $("#clearErrors").click(function(e){
 
         $("#errorLog").empty();
-        
+
     });
 
     $(".insert-new-object").click(function(e){
@@ -161,7 +161,7 @@
     $(".update-object").click(function(e){
 
         var sampleObject = $.parseJSON($("#sampleObj").val());
-        sampleObject.open = false;    
+        sampleObject.open = false;
 
         getObjectSet()
             .update(sampleObject)
@@ -222,4 +222,4 @@
     </script>
 
     </body>
-</html> 
+</html>

@@ -2,11 +2,11 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title>Kidozen Samples</title>        
-        <meta name="viewport" content="width=device-width, initial-scale=1"> 
+        <title>Kidozen Samples</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
-        <script src="//code.jquery.com/jquery-1.6.4.min.js"></script>
+        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
         <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
         <style>
             #object {
@@ -17,14 +17,14 @@
     <body>
 
     <div id="storage" data-role="page">
-        
+
         <div data-role="header">
             <h1>Kidozen - Notifications Sample</h1>
             <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
         </div>
 
         <div data-role="content">
-            
+
             <form id="sendNotification">
                 <div data-role="fieldcontain">
                     <label for="channel">channel:</label>
@@ -58,7 +58,7 @@
                     <label for="param">param:</label>
                     <input type="text" id="param" name="param"></input>
                 </div>
-                
+
                 <input class="btn" type="submit" value="send"/>
                 <input id="clearLogButton" type="button" value="clear log"/>
             </form>
@@ -71,23 +71,23 @@
 
     <!-- KIDOZEN SDK -->
     <script src="/js/kido.js"></script>
-    
+
     <script type="text/javascript">
         $(document).ready(function(){
             var notifications = new Kido().notifications();
-            
+
             $("#clearLogButton").click(function(e) {
                 e.preventDefault();
                 e.stopPropagation();
 
                 $("#log").empty();
-            }); 
+            });
 
             $("#sendNotification").submit(function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                
-                var notif = { 
+
+                var notif = {
                     channel : $("#channel").val(),
                     title   : $("#title").val(),
                     type    : $("#type").val(),

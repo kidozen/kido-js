@@ -2,24 +2,24 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title>Kidozen Samples</title>        
-        <meta name="viewport" content="width=device-width, initial-scale=1"> 
+        <title>Kidozen Samples</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
-        <script src="//code.jquery.com/jquery-1.6.4.min.js"></script>
+        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
         <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
     </head>
     <body>
-        
+
         <div data-role="page">
-            
+
             <div data-role="header">
                 <h1>Kidozen - Storage Samples</h1>
                 <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
             </div>
 
             <div data-role="content">
-                
+
                 <div data-role="fieldcontain">
                   <label for="toPhone">To Phone#:</label>
                   <input type="text" name="toPhone" id="toPhone" value="19192018509" placeholder="phone number"/>
@@ -32,15 +32,15 @@
 
                 <div data-role="collapsible" data-collapsed="false" data-theme="b" data-content-theme="c">
                     <h3>Send or Query</h3>
-                    
+
                     <div data-role="controlgroup" data-type="horizontal">
                         <a data-role="button" class="send-msg">Send</a>
                         <a data-role="button" class="query-status">Query Status</a>
                     </div>
-                   
+
                 </div>
 
-                
+
                 <section id="logs" class="ui-body ui-body-b">
                     <button type="button" id="clearConfirmation" class="btn">Clear Logs</button>
                     <button type="button" id="clearErrors" class="btn">Clear Errors</button>
@@ -58,14 +58,14 @@
 
         <!-- KIDOZEN SDK -->
         <script src="/js/kido.js"></script>
-        
+
         <script type="text/javascript">
 
             var sms = new Kido().sms(),
                 id  = null;
 
             $(".send-msg").click(function(e){
-                
+
                 var toPhone = $("#toPhone").val(),
                     message = $("#testMsg").val();
 
@@ -86,7 +86,7 @@
 
                     alert("Send and sms first.");
 
-                }else{ 
+                }else{
 
                     sms
                         .getStatus(id)

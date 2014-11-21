@@ -2,11 +2,11 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title>Kidozen Samples</title>        
-        <meta name="viewport" content="width=device-width, initial-scale=1"> 
+        <title>Kidozen Samples</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
-        <script src="//code.jquery.com/jquery-1.6.4.min.js"></script>
+        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
         <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
         <style>
             #object {
@@ -17,7 +17,7 @@
     <body>
 
 	    <div id="storage" data-role="page">
-	        
+
 	        <div data-role="header">
 	            <h1>Kidozen - Security Samples</h1>
 	            <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
@@ -41,7 +41,7 @@
 				new Kido()
 					.security()
 					.getLoggedInUser()
-					.done( function ( claims ) { 
+					.done( function ( claims ) {
 						$.each( claims, function ( i, c ) {
 							$("#claims")
 								.append($("<li>" + c.type + ": " + c.value +  "</li>"));
