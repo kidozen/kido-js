@@ -48,8 +48,7 @@ var Kido = function (name, marketplace, options) {
     this.hosted = !marketplace;
     this.authenticated = this.hosted ? true : false;
     this.isNative = (document.URL.indexOf('http://') === -1 && document.URL.indexOf('https://') === -1);
-    this.useHttpCompression = false;
-
+    
     if (typeof options === 'object') {
         if (typeof options.token === 'object') {
             this.inheritedToken = options.token;
@@ -66,7 +65,6 @@ var Kido = function (name, marketplace, options) {
         if (typeof options.secretKey === 'string') {
             _secretKey = options.secretKey;
         }
-        this.useHttpCompression = options.useHttpCompression || false;
     }
 
     // get the application security configuration in case of
@@ -134,10 +132,6 @@ var Kido = function (name, marketplace, options) {
         };
 
         var opts = $.extend({}, defaults, settings);
-
-        if (self.useHttpCompression) {
-            opts.headers["Accept-Encoding"] = "gzip, deflate";
-        }
 
         if (opts.data && !opts.contentType)
             opts.contentType = "application/json";
