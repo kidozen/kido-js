@@ -1647,7 +1647,7 @@ var KidoDatasource = function (kidoApp, name, options) {
     if (!(this instanceof KidoDatasource)) return new KidoDatasource(kidoApp, name);
     if (!kidoApp) throw "The 'kidoApp' argument is required by the KidoDatasource class.";
     if (!name) throw "The 'name' argument is required by the KidoDatasource class.";
-    if (!options) options = { caching: false, queueing: false, timeout: null };
+    if (!options) options = { caching: false, queueing: false, timeout: null, useHttpCompression: false };
 
     /**
      * @type {KidoDatasource}
@@ -1682,6 +1682,10 @@ var KidoDatasource = function (kidoApp, name, options) {
      * @type {number}
      */
     this.timeout = options.timeout || null;
+    /**
+     * @type {boolean}
+     */
+    this.useHttpCompression = options.useHttpCompression || false;
 
 
     /**
@@ -1707,7 +1711,15 @@ var KidoDatasource = function (kidoApp, name, options) {
         var result = $.Deferred();
         var args = $.extend({}, self._defaults, opts);
         var qs = Object.keys(args).length > 0 ? "?" + $.param(args) : "";
-        var settings = self.timeout ? { headers: { "timeout": self.timeout } } : {};
+        var settings = {
+            headers: {}
+        };
+        if (self.timeout) {
+            settings.headers.timeout = self.timeout;
+        }
+        if (self.useHttpCompression) {
+            settings.headers["Accept-Encoding"] = "gzip, deflate";
+        }
 
         // Offline configuration
         settings.kidoService = {
@@ -1741,7 +1753,15 @@ var KidoDatasource = function (kidoApp, name, options) {
     this.invoke = function (opts) {
         var result = $.Deferred();
         var args = $.extend({}, self._defaults, opts);
-        var settings = self.timeout ? { headers: { "timeout": self.timeout } } : {};
+        var settings = {
+            headers: {}
+        };
+        if (self.timeout) {
+            settings.headers.timeout = self.timeout;
+        }
+        if (self.useHttpCompression) {
+            settings.headers["Accept-Encoding"] = "gzip, deflate";
+        }
 
         // Offline configuration
         settings.kidoService = {
