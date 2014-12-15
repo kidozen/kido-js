@@ -1,58 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <title>Kidozen Samples</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
-        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-        <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
-        <style>
-            #object {
-                height: 100px;
-            }
-        </style>
-    </head>
-    <body>
+<head>
+    <meta charset="utf-8" />
+    <title>Kidozen Samples</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-	    <div id="storage" data-role="page">
+    <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+    <style>
+    #object {
+        height: 100px;
+    }
+    </style>
+</head>
 
-	        <div data-role="header">
-	            <h1>Kidozen - Security Samples</h1>
-	            <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
-	        </div>
+<body>
 
-	        <div data-role="content">
-	            <h3>Logged in user</h3>
-				<ul id="claims" data-role="listview">
-				</ul>
+    <div id="storage" data-role="page">
+
+        <div data-role="header">
+            <h1>Kidozen - Security Samples</h1>
+            <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
+        </div>
+
+        <div data-role="content">
+            <h3>Logged in user</h3>
+            <ul id="claims" data-role="listview">
+            </ul>
 
 
-	        </div>
-	    </div>
+        </div>
+    </div>
 
-	    <!-- KIDOZEN SDK -->
-	    <script src="/js/kido.js"></script>
+    <!-- KIDOZEN SDK -->
+    <script src="/js/kido.js"></script>
 
-		<script type="text/javascript">
-			$( document ).delegate( "[data-role=page]", "pageinit", function() {
+    <script type="text/javascript">
+    $(function() {
+        'use strict';
 
-				new Kido()
-					.security()
-					.getLoggedInUser()
-					.done( function ( claims ) {
-						$.each( claims, function ( i, c ) {
-							$("#claims")
-								.append($("<li>" + c.type + ": " + c.value +  "</li>"));
-						});
+        var application = 'app-name',
+            marketplace = 'my-company.kidocloud.com',
+            secretKey = 'your-app-secret-key',
+            kido = new Kido(application, marketplace, {
+                secretKey: secretKey
+            });
 
-						$("#claims").listview("refresh").trigger("create");
-					})
-					.fail(function ( e ) {
-						alert('get claim failed: ' + e);
-					});
-			});
-		</script>
-	</body>
+        var security = kido.security();
+
+        security
+            .getLoggedInUser()
+            .done(function(claims) {
+                $.each(claims, function(i, c) {
+                    $("#claims")
+                        .append($("<li>" + c.type + ": " + c.value + "</li>"));
+                });
+
+                $("#claims").listview("refresh").trigger("create");
+            })
+            .fail(function(e) {
+                alert('get claim failed: ' + e);
+            });
+
+    });
+    </script>
+</body>
+
 </html>

@@ -1,20 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <title>Kidozen Samples</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
-        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-        <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
-        <style>
-            #object {
-                height: 100px;
-            }
-        </style>
-    </head>
-    <body>
+<head>
+    <meta charset="utf-8" />
+    <title>Kidozen Samples</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+    <style>
+    #object {
+        height: 100px;
+    }
+    </style>
+</head>
+
+<body>
 
     <div id="storage" data-role="page">
 
@@ -59,61 +61,67 @@
     <script src="/js/kido.js"></script>
 
     <script type="text/javascript">
-        $(document).ready(function() {
+    $(function() {
+        'use strict';
 
-            var email = new Kido().email();
-
-            $("#clearLogButton").click(function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                $("#log").empty();
+        var application = 'app-name',
+            marketplace = 'my-company.kidocloud.com',
+            secretKey = 'your-app-secret-key',
+            kido = new Kido(application, marketplace, {
+                secretKey: secretKey
             });
 
-            $("#sendMail").click(function(e) {
-                e.preventDefault();
-                e.stopPropagation();
+        var email = kido.email();
 
-                var mail =  {
-                    to: $("#to").val(),
-                    from: $("#from").val(),
-                    subject: $("#subject").val(),
-                    bodyText: $("#bodyText").val(),
-                    bodyHtml: $("#bodyHtml").val()
-                };
+        $("#clearLogButton").click(function(e) {
+            e.preventDefault();
+            e.stopPropagation();
 
-                if ($("#attachment").val()) {
-
-                    email
-                        .attach($("#attachment")[0].files[0])
-                        .done(function (attachments) {
-                            mail.attachments = attachments;
-                            return email.send(mail);
-                        })
-                        .done(function() {
-                            alert('email sent');
-                        })
-                        .fail(function() {
-                            alert('email not sent.');
-                        });
-
-                } else {
-
-                    email
-                        .send(mail)
-                        .done(function() {
-                            alert('email sent');
-                        })
-                        .fail(function() {
-                            alert('email not sent.');
-                        });
-                }
-            });
+            $("#log").empty();
         });
 
-        function currentTime() {
-            return new Date().getHours().toString() + ":" + new Date().getMinutes().toString() + ":" + new Date().getSeconds().toString();
-        };
+        $("#sendMail").click(function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var mail = {
+                to: $("#to").val(),
+                from: $("#from").val(),
+                subject: $("#subject").val(),
+                bodyText: $("#bodyText").val(),
+                bodyHtml: $("#bodyHtml").val()
+            };
+
+            if ($("#attachment").val()) {
+
+                email
+                    .attach($("#attachment")[0].files[0])
+                    .done(function(attachments) {
+                        mail.attachments = attachments;
+                        return email.send(mail);
+                    })
+                    .done(function() {
+                        alert('email sent');
+                    })
+                    .fail(function() {
+                        alert('email not sent.');
+                    });
+
+            } else {
+
+                email
+                    .send(mail)
+                    .done(function() {
+                        alert('email sent');
+                    })
+                    .fail(function() {
+                        alert('email not sent.');
+                    });
+            }
+        });
+
+    });
     </script>
 </body>
+
 </html>

@@ -1,68 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <title>Kidozen Samples</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
-        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-        <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
-    </head>
-    <body>
+<head>
+    <meta charset="utf-8" />
+    <title>Kidozen Samples</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <div data-role="page">
+    <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+</head>
 
-            <div data-role="header">
-                <h1>Kidozen - Queue Sample</h1>
-                <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
+<body>
+
+    <div data-role="page">
+
+        <div data-role="header">
+            <h1>Kidozen - Queue Sample</h1>
+            <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
+        </div>
+
+        <div data-role="content">
+
+            <div data-role="collapsible" data-collapsed="false" data-theme="b" data-content-theme="c">
+                <h3>Push an object</h3>
+                <pre>{"action": "approve", orderId: 1234}</pre>
+                <button class="push-new-object">Push</button>
+                <button class="dequeue-object">Dequeue</button>
             </div>
 
-            <div data-role="content">
-
-                <div data-role="collapsible" data-collapsed="false" data-theme="b" data-content-theme="c">
-                    <h3>Push an object</h3>
-                    <pre>{"action": "approve", orderId: 1234}</pre>
-                    <button class="push-new-object">Push</button>
-                    <button class="dequeue-object">Dequeue</button>
+            <section id="logs" class="ui-body ui-body-b">
+                <button type="button" id="clearConfirmation" class="btn">Clear Logs</button>
+                <button type="button" id="clearErrors" class="btn">Clear Errors</button>
+                <div class="ui-grid-a">
+                    <span class="ui-block-a">Logs</span>
+                    <span class="ui-block-b">Errors</span>
+                    <div id="confirmationLog" class="log-view ui-block-a"></div>
+                    <div id="errorLog" class="log-view ui-block-b"></div>
                 </div>
+            </section>
 
-                <section id="logs" class="ui-body ui-body-b">
-                    <button type="button" id="clearConfirmation" class="btn">Clear Logs</button>
-                    <button type="button" id="clearErrors" class="btn">Clear Errors</button>
-                    <div class="ui-grid-a">
-                        <span class="ui-block-a">Logs</span>
-                        <span class="ui-block-b">Errors</span>
-                        <div id="confirmationLog" class="log-view ui-block-a"></div>
-                        <div id="errorLog" class="log-view ui-block-b"></div>
-                    </div>
-                </section>
-
-                <section id="readme" data-role="collapsible" data-collapsed="true" data-theme="b" data-content-theme="c">
-                    <h3>Read me</h3>
-                    <h4>Queues example</h4>
-                    <p>
-                        This is an example of queues in Kidozen.
-                    </p>
-                    <h5>Pushing messages to the queue</h5>
-                    <p>
-                        Kidozen handles pushing messages to arbitraries queues with a simple HTTP POST to the application url as:
-                        <br>
-                        /queue/local/queueName
-                        <br>
-                        or to another application queue as:
-                        <br>
-                        /queue/anotherApplication/queueName
-                        <br>
-                        The method of the request should be a POST, the content type should be "application/json" and the body should have the message to post to the queue.
-                    </p>
-                    <h5>Consuming the Queue</h5>
-                    <p>
-                        Consuming the Queue is not something that you will normally do in a mobile application. However you can do this by simple using HTTP DELETE request.
-                        <br>
-                        As an example you can consume a queue from ruby as follows:
-                    </p>
-                    <pre>
+            <section id="readme" data-role="collapsible" data-collapsed="true" data-theme="b" data-content-theme="c">
+                <h3>Read me</h3>
+                <h4>Queues example</h4>
+                <p>
+                    This is an example of queues in Kidozen.
+                </p>
+                <h5>Pushing messages to the queue</h5>
+                <p>
+                    Kidozen handles pushing messages to arbitraries queues with a simple HTTP POST to the application url as:
+                    <br> /queue/local/queueName
+                    <br> or to another application queue as:
+                    <br> /queue/anotherApplication/queueName
+                    <br> The method of the request should be a POST, the content type should be "application/json" and the body should have the message to post to the queue.
+                </p>
+                <h5>Consuming the Queue</h5>
+                <p>
+                    Consuming the Queue is not something that you will normally do in a mobile application. However you can do this by simple using HTTP DELETE request.
+                    <br> As an example you can consume a queue from ruby as follows:
+                </p>
+                <pre>
     require 'net/http'
     require 'uri'
     uri = URI.parse('//localhost:5000/queue/local/tasks/next')
@@ -77,64 +74,79 @@
     rescue Exception=>e
     end
                     </pre>
-                </section>
-            </div>
-
+            </section>
         </div>
-        <!-- KIDOZEN SDK -->
-        <script src="/js/kido.js"></script>
 
-        <script type="text/javascript">
+    </div>
+    <!-- KIDOZEN SDK -->
+    <script src="/js/kido.js"></script>
 
-            var queue = new Kido().queues().queue('sample');
+    <script type="text/javascript">
+    $(function() {
+        'use strict';
 
-            $(".push-new-object").click(function(e){
-
-                queue
-                    .push({"action": "approve", orderId: 1234})
-                    .done(function(ret){
-                        writeActionLog("push object to queues", ret);
-                    })
-                    .fail(writeError);
+        var application = 'app-name',
+            marketplace = 'my-company.kidocloud.com',
+            secretKey = 'your-app-secret-key',
+            kido = new Kido(application, marketplace, {
+                secretKey: secretKey
             });
 
-            $(".dequeue-object").click(function () {
-                queue
-                    .dequeue()
-                    .done(function ( ret ) {
-                        writeActionLog("dequeued object ", ret);
-                    })
-                    .fail(writeError);
-            });
+        var queue = kido.queues().queue('sample');
 
-            function writeError(errorObj){
+        $(".push-new-object").click(function() {
 
-                if($.isPlainObject(errorObj)){
-                    errorObj = JSON.stringify(errorObj);
-                }
+            queue
+                .push({
+                    "action": "approve",
+                    orderId: 1234
+                })
+                .done(function(ret) {
+                    writeActionLog("push object to queues", ret);
+                })
+                .fail(writeError);
+        });
 
-                var $errorLog = $("#errorLog"),
-                    errorLog = "error :" + "<br/>" + errorObj + "<br/>" + $errorLog.html();
+        $(".dequeue-object").click(function() {
+            queue
+                .dequeue()
+                .done(function(ret) {
+                    writeActionLog("dequeued object ", ret);
+                })
+                .fail(writeError);
+        });
 
-                $errorLog.html(errorLog);
+        function writeError(errorObj) {
 
+            if ($.isPlainObject(errorObj)) {
+                errorObj = JSON.stringify(errorObj);
             }
 
-            function writeActionLog(action, message){
+            var $errorLog = $("#errorLog"),
+                errorLog = "error :" + "<br/>" + errorObj + "<br/>" + $errorLog.html();
 
-                if($.isPlainObject(message)){
-                    if(JSON && JSON.stringify)
-                        message = JSON.stringify(message);
-                    else
-                        message = message.toString();
-                }
+            $errorLog.html(errorLog);
 
-                var $confirm = $("#confirmationLog"),
-                    confirm = "action " + action + "<br/>" + message + "<br/>" + $confirm.html();
+        }
 
-                $confirm.html(confirm);
+        function writeActionLog(action, message) {
 
+            if ($.isPlainObject(message)) {
+                if (JSON && JSON.stringify)
+                    message = JSON.stringify(message);
+                else
+                    message = message.toString();
             }
-        </script>
-    </body>
+
+            var $confirm = $("#confirmationLog"),
+                confirm = "action " + action + "<br/>" + message + "<br/>" + $confirm.html();
+
+            $confirm.html(confirm);
+
+        }
+
+    });
+    </script>
+</body>
+
 </html>

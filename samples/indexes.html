@@ -1,91 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <title>Kidozen Samples</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
-        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-        <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+<head>
+    <meta charset="utf-8" />
+    <title>Kidozen Samples</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    </head>
-    <body>
-        <div data-role="page">
-            <div data-role="header">
-                <h1>Kidozen - Config Samples</h1>
-                <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
+    <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+
+</head>
+
+<body>
+    <div data-role="page">
+        <div data-role="header">
+            <h1>Kidozen - Config Samples</h1>
+            <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
+        </div>
+
+        <div data-role="content">
+
+            <h1>Indexation example</h1>
+            <p>Enter 'object set name' name first!</p>
+
+            <div>
+                <label for="objectSet">objectSetName:</label>
+                <input type="text" id="objectSet" name="objectSet" value="foo"></input>
+                <br></br>
+                <label for="spec">index spec:</label>
+                <br></br>
+                <textarea type="text" id="spec" name="spec" rows="4" cols="50">{lastName:1}</textarea>
+                <br></br>
+                <label for="safe">safe?</label>
+                <input type="checkbox" id="safe" name="safe"></input>
+                <br></br>
+                <label for="unique">unique?</label>
+                <input type="checkbox" id="unique" name="unique"></input>
+                <br></br>
+                <label for="sparse">sparse?</label>
+                <input type="checkbox" id="sparse" name="sparse"></input>
+                <br></br>
+                <label for="background">background?</label>
+                <input type="checkbox" id="background" name="background"></input>
+                <br></br>
+                <label for="dropDups">dropDups?</label>
+                <input type="checkbox" id="dropDups" name="dropDups"></input>
+                <br></br>
+                <label for="min">min:</label>
+                <input type="text" id="min" value="0" name="min"></input>
+                <br></br>
+                <label for="max">max:</label>
+                <input type="text" id="max" value="0" name="max"></input>
+                <br></br>
+                <input id="createIndexButton" type="button" value="create index" />
+                <input id="allIndexButton" type="button" value="get all indexes" />
+                <input id="getIndexButton" type="button" value="get index" />
+                <input id="deleteIndexButton" type="button" value="delete index" />
             </div>
-
-            <div data-role="content">
-
-                <h1>Indexation example</h1>
-                <p>Enter 'object set name' name first!</p>
-
-                <div>
-                    <label for="objectSet">objectSetName:</label>
-                    <input type="text" id="objectSet" name="objectSet" value="foo"></input>
-                    <br></br>
-                    <label for="spec">index spec:</label>
-                    <br></br>
-                    <textarea type="text" id="spec" name="spec" rows="4" cols="50">{lastName:1}</textarea>
-                    <br></br>
-                    <label for="safe">safe?</label>
-                    <input type="checkbox" id="safe" name="safe"></input>
-                    <br></br>
-                    <label for="unique">unique?</label>
-                    <input type="checkbox" id="unique" name="unique"></input>
-                    <br></br>
-                    <label for="sparse">sparse?</label>
-                    <input type="checkbox" id="sparse" name="sparse"></input>
-                    <br></br>
-                    <label for="background">background?</label>
-                    <input type="checkbox" id="background" name="background"></input>
-                    <br></br>
-                    <label for="dropDups">dropDups?</label>
-                    <input type="checkbox" id="dropDups" name="dropDups"></input>
-                    <br></br>
-                    <label for="min">min:</label>
-                    <input type="text" id="min" value="0" name="min"></input>
-                    <br></br>
-                    <label for="max">max:</label>
-                    <input type="text" id="max" value="0" name="max"></input>
-                    <br></br>
-                    <input id="createIndexButton" type="button" value="create index"/>
-                    <input id="allIndexButton" type="button" value="get all indexes"/>
-                    <input id="getIndexButton" type="button" value="get index"/>
-                    <input id="deleteIndexButton" type="button" value="delete index"/>
-                </div>
-                <div>
-                    <label for="objectInstance">test instance (INSERT):</label>
-                    <br></br>
-                    <textarea id="objectInstance" name="objectInstance" rows="4" cols="50">{lastName:'Secada', firstName:'John'}</textarea>
-                    <br></br>
-                    <input id="runTestButton" type="button" value="insert test"/>
-                    <br></br>
-                    <input id="clearLogButton" type="button" value="clear log"/>
-                    <br></br>
-                    <h3>log</h3>
-                    <ul id="log">
-                    </ul>
-                </div>
+            <div>
+                <label for="objectInstance">test instance (INSERT):</label>
+                <br></br>
+                <textarea id="objectInstance" name="objectInstance" rows="4" cols="50">{lastName:'Secada', firstName:'John'}</textarea>
+                <br></br>
+                <input id="runTestButton" type="button" value="insert test" />
+                <br></br>
+                <input id="clearLogButton" type="button" value="clear log" />
+                <br></br>
+                <h3>log</h3>
+                <ul id="log">
+                </ul>
             </div>
+        </div>
 
 
         <!-- KIDOZEN SDK -->
         <script src="/js/kido.js"></script>
 
         <script type="text/javascript">
-            var storage = new Kido().storage();
+        $(function() {
+            'use strict';
 
-            objectSet = function () {
+            var application = 'app-name',
+                marketplace = 'my-company.kidocloud.com',
+                secretKey = 'your-app-secret-key',
+                kido = new Kido(application, marketplace, {
+                    secretKey: secretKey
+                });
+
+            var storage = kido.storage();
+
+            var objectSet = function() {
                 var objectSetName = $("#objectSet").val();
                 return storage.objectSet(objectSetName);
-            }
+            };
 
-            indexes = function () {
+            var indexes = function() {
                 return objectSet().indexes();
-            }
+            };
 
             $(document).ready(function() {
 
@@ -128,7 +140,7 @@
                     var indexes = indexes();
 
                     var index = {
-                        spec: eval("("+$("#spec").text()+")"),
+                        spec: eval("(" + $("#spec").text() + ")"),
                         safe: $("#safe:checked").length > 0,
                         unique: $("#unique:checked").length > 0,
                         sparse: $("#sparse:checked").length > 0,
@@ -140,10 +152,10 @@
 
                     indexes
                         .create(index.spec, index.safe, index.unique, index.sparse, index.background, index.dropDups, index.min, index.max)
-                        .done(function(d) {
+                        .done(function() {
                             var li = $("<li>" + currentTime() + " - index created!</li>");
                             $("#log").prepend(li);
-                        });
+                        })
                         .fail(function(e) {
                             var li = $("<li>" + currentTime() + " - error: " + JSON.stringify(e) + "</li>");
                             $("#log").prepend(li);
@@ -152,22 +164,25 @@
             });
 
             function insertObject() {
-                var data = eval("("+$("#objectInstance").text()+")");
+                var data = eval("(" + $("#objectInstance").text() + ")");
                 objectSet()
                     .insert(data)
-                    .done(function(d) {
+                    .done(function() {
                         var li = $("<li>" + currentTime() + " - foo inserted!</li>");
                         $("#log").prepend(li);
-                    });
+                    })
                     .fail(function(e) {
                         var li = $("<li>" + currentTime() + " - error: " + JSON.stringify(e) + "</li>");
                         $("#log").prepend(li);
                     });
-            };
+            }
 
             function currentTime() {
                 return new Date().getHours().toString() + ":" + new Date().getMinutes().toString() + ":" + new Date().getSeconds().toString();
-            };
+            }
+
+        });
         </script>
-    </body>
+</body>
+
 </html>

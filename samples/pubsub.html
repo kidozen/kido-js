@@ -1,91 +1,101 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <title>Kidozen Samples</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
-        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-        <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
-        <style>
-            #object {
-                height: 100px;
-            }
-        </style>
-    </head>
-    <body>
+<head>
+    <meta charset="utf-8" />
+    <title>Kidozen Samples</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <div id="storage" data-role="page">
+    <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+    <style>
+    #object {
+        height: 100px;
+    }
+    </style>
+</head>
 
-            <div data-role="header">
-                <h1>Kidozen - Storage Samples</h1>
-                <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
-            </div>
+<body>
 
-            <div data-role="content">
+    <div id="storage" data-role="page">
 
-                <form id="sendMsg">
-                    <div data-role="fieldcontain">
-                      <label for="nickName">Nick name:</label>
-                      <input type="text" name="nickName" id="nickName" value="" placeholder="Put your nick name first!"/>
-                    </div>
-                    <div data-role="fieldcontain">
-                        <label for="message">Message</label>
-                        <input type="text" id="message" name="message">
-                    </div>
-                    <input class="btn" type="submit" value="send"/>
-                </form>
-
-                <h3>History</h3>
-                <ul id="history" data-role="listview">
-                </ul>
-
-
-            </div>
+        <div data-role="header">
+            <h1>Kidozen - Storage Samples</h1>
+            <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
         </div>
 
-        <!-- KIDOZEN SDK -->
-        <!-- pubsub needs socket.io -->
-        <script src="/js/socket.io.min.js"></script>
-        <script src="/js/kido.js"></script>
+        <div data-role="content">
 
-        <script type="text/javascript">
-            var disposeChannel = null;
-            $(function () {
-                var application = 'app-name',
-                    marketplace = 'my-company.kidocloud.com',
-                    secretKey = 'your-app-secret-key',
-                    kido = new Kido(application, marketplace, { secretKey: secretKey });
+            <form id="sendMsg">
+                <div data-role="fieldcontain">
+                    <label for="nickName">Nick name:</label>
+                    <input type="text" name="nickName" id="nickName" value="" placeholder="Put your nick name first!" />
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="message">Message</label>
+                    <input type="text" id="message" name="message">
+                </div>
+                <input class="btn" type="submit" value="send" />
+            </form>
 
-                var channel = kido.pubsub().channel("chat");
+            <h3>History</h3>
+            <ul id="history" data-role="listview">
+            </ul>
 
-                disposeChannel = channel.subscribe(function (message) {
-                    $("#history")
-                        .append($("<li>" + message.nickName + " said: <b>" + message.message + "</b></li>"));
 
-                    $("#history").listview("refresh").trigger("create");
-                });
+        </div>
+    </div>
 
-                //to disconnect from server use disposeChannel();
+    <!-- KIDOZEN SDK -->
+    <!-- pubsub needs socket.io -->
+    <script src="/js/socket.io.min.js"></script>
+    <script src="/js/kido.js"></script>
 
-                $("#sendMsg").submit(function (e) {
+    <script type="text/javascript">
+    $(function() {
+        'use strict';
 
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    var msg = { message: $("#message").val(), nickName: $("#nickName").val() };
-
-                    channel
-                        .publish(msg)
-                        .done(function () {
-                            $("#message").val("").focus();
-                         });
-
-                    return false;
-                });
-
+        var application = 'app-name',
+            marketplace = 'my-company.kidocloud.com',
+            secretKey = 'your-app-secret-key',
+            kido = new Kido(application, marketplace, {
+                secretKey: secretKey
             });
-        </script>
-    </body>
+
+        var channel = kido.pubsub().channel("chat");
+        var disposeChannel = null;
+
+        disposeChannel = channel.subscribe(function(message) {
+            $("#history")
+                .append($("<li>" + message.nickName + " said: <b>" + message.message + "</b></li>"));
+
+            $("#history").listview("refresh").trigger("create");
+        });
+
+        //to disconnect from server use disposeChannel();
+
+        $("#sendMsg").submit(function(e) {
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            var msg = {
+                message: $("#message").val(),
+                nickName: $("#nickName").val()
+            };
+
+            channel
+                .publish(msg)
+                .done(function() {
+                    $("#message").val("").focus();
+                });
+
+            return false;
+        });
+
+    });
+    </script>
+</body>
+
 </html>

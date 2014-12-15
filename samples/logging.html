@@ -1,190 +1,213 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <title>Kidozen Samples</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
-        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-        <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
-    </head>
-    <body>
-        <div id="storage" data-role="page">
-            <div data-role="header">
-                <h1>Kidozen - Logging Samples</h1>
-                <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
-            </div>
+<head>
+    <meta charset="utf-8" />
+    <title>Kidozen Samples</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-            <div data-role="content">
+    <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+</head>
 
-                <div data-role="collapsible" data-theme="b" data-content-theme="c">
-                    <h3>Write</h3>
+<body>
+    <div id="storage" data-role="page">
+        <div data-role="header">
+            <h1>Kidozen - Logging Samples</h1>
+            <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
+        </div>
 
-                    <pre>
+        <div data-role="content">
+
+            <div data-role="collapsible" data-theme="b" data-content-theme="c">
+                <h3>Write</h3>
+
+                <pre>
     {"foo": "bar"}
                     </pre>
-                    <div data-role="controlgroup" data-type="horizontal">
-                        <a data-role="button" class="writeVerbose-log">Verbose</a>
-                        <a data-role="button" class="writeInfo-log">Info</a>
-                        <a data-role="button" class="writeWarning-log">Warning</a>
-                        <a data-role="button" class="writeError-log">Error</a>
-                        <a data-role="button" class="writeCritical-log">Critical</a>
-                    </div>
-
+                <div data-role="controlgroup" data-type="horizontal">
+                    <a data-role="button" class="writeVerbose-log">Verbose</a>
+                    <a data-role="button" class="writeInfo-log">Info</a>
+                    <a data-role="button" class="writeWarning-log">Warning</a>
+                    <a data-role="button" class="writeError-log">Error</a>
+                    <a data-role="button" class="writeCritical-log">Critical</a>
                 </div>
 
-                <div data-role="collapsible" data-theme="b" data-content-theme="c">
-                    <h3>Get</h3>
-                    <button class="get-log">Get</button>
-                    <pre id="get-log-result">
+            </div>
+
+            <div data-role="collapsible" data-theme="b" data-content-theme="c">
+                <h3>Get</h3>
+                <button class="get-log">Get</button>
+                <pre id="get-log-result">
 
                     </pre>
-                </div>
-
-                <div data-role="collapsible" data-theme="b" data-content-theme="c">
-                    <h3>Clear</h3>
-                    <button class="clear-log">Clear</button>
-                </div>
-
-                <section id="logs" class="ui-body ui-body-b">
-                    <button type="button" id="clearConfirmation" class="btn">Clear Logs</button>
-                    <button type="button" id="clearErrors" class="btn">Clear Errors</button>
-                    <div class="ui-grid-a">
-                        <span class="ui-block-a">Logs</span>
-                        <span class="ui-block-b">Errors</span>
-                        <div id="confirmationLog" class="log-view ui-block-a"></div>
-                        <div id="errorLog" class="log-view ui-block-b"></div>
-                    </div>
-                </section>
             </div>
+
+            <div data-role="collapsible" data-theme="b" data-content-theme="c">
+                <h3>Clear</h3>
+                <button class="clear-log">Clear</button>
+            </div>
+
+            <section id="logs" class="ui-body ui-body-b">
+                <button type="button" id="clearConfirmation" class="btn">Clear Logs</button>
+                <button type="button" id="clearErrors" class="btn">Clear Errors</button>
+                <div class="ui-grid-a">
+                    <span class="ui-block-a">Logs</span>
+                    <span class="ui-block-b">Errors</span>
+                    <div id="confirmationLog" class="log-view ui-block-a"></div>
+                    <div id="errorLog" class="log-view ui-block-b"></div>
+                </div>
+            </section>
         </div>
+    </div>
 
     <!-- KIDOZEN SDK -->
     <script src="/js/kido.js"></script>
 
     <script type="text/javascript">
+    $(function() {
+        'use strict';
 
-        var logging = new Kido().logging();
+        var application = 'app-name',
+            marketplace = 'my-company.kidocloud.com',
+            secretKey = 'your-app-secret-key',
+            kido = new Kido(application, marketplace, {
+                secretKey: secretKey
+            });
 
-        $(".writeInfo-log").click(function(e){
+        var logging = kido.logging();
+
+        $(".writeInfo-log").click(function() {
 
             logging
-                .writeInfo({"foo": "bar"})
-                .done(function(ret){
+                .writeInfo({
+                    "foo": "bar"
+                })
+                .done(function(ret) {
                     writeActionLog("writeInfo log", ret);
                 })
-                .fail(function(e){
+                .fail(function(e) {
                     writeError(e);
                 });
 
         });
 
 
-        $(".writeVerbose-log").click(function(e){
+        $(".writeVerbose-log").click(function() {
 
             logging
-                .writeVerbose({"foo": "bar"})
-                .done(function(ret){
+                .writeVerbose({
+                    "foo": "bar"
+                })
+                .done(function(ret) {
                     writeActionLog("writeVerbose log", ret);
                 })
-                .fail(function(e){
+                .fail(function(e) {
                     writeError(e);
                 });
         });
 
-        $(".writeWarning-log").click(function(e){
+        $(".writeWarning-log").click(function() {
 
             logging
-                .writeWarning({"foo": "bar"})
-                .done(function(ret){
+                .writeWarning({
+                    "foo": "bar"
+                })
+                .done(function(ret) {
                     writeActionLog("writeWarning log", ret);
                 })
-                .fail(function(e){
+                .fail(function(e) {
                     writeError(e);
                 });
 
         });
 
 
-        $(".writeError-log").click(function(e){
+        $(".writeError-log").click(function() {
 
             logging
-                .writeError({"foo": "bar"})
-                .done(function(ret){
+                .writeError({
+                    "foo": "bar"
+                })
+                .done(function(ret) {
                     writeActionLog("writeError log", ret);
                 })
-                .fail(function(e){
+                .fail(function(e) {
                     writeError(e);
                 });
         });
 
-        $(".writeCritical-log").click(function(e){
+        $(".writeCritical-log").click(function() {
 
             logging
-                .writeCritical({"foo": "bar"})
-                .done(function(ret){
+                .writeCritical({
+                    "foo": "bar"
+                })
+                .done(function(ret) {
                     writeActionLog("writeCritical log", ret);
                 })
-                .fail(function(e){
+                .fail(function(e) {
                     writeError(e);
                 });
         });
 
-        $(".write-log").click(function(e){
+        $(".write-log").click(function() {
 
             logging
-                .write({"foo": "bar real"}, 1)
-                .done(function(ret){
+                .write({
+                    "foo": "bar real"
+                }, 1)
+                .done(function(ret) {
                     writeActionLog("write log", ret);
                 })
-                .fail(function(e){
+                .fail(function(e) {
                     writeError(e);
                 });
         });
 
-        $(".get-log").click(function(e){
+        $(".get-log").click(function() {
 
             logging
                 .get()
-                .done(function(ret){
+                .done(function(ret) {
                     writeActionLog("clear log", JSON.stringify(ret));
                     $('#get-log-result').html(JSON.stringify(ret));
                 })
-                .fail(function(e){
+                .fail(function(e) {
                     writeError(e);
                 });
         });
 
-        $(".clear-log").click(function(e){
+        $(".clear-log").click(function() {
 
             logging
                 .clear()
-                .done(function(ret){
+                .done(function(ret) {
                     writeActionLog("clear log", ret);
-                 })
-                .fail(function(e){
+                })
+                .fail(function(e) {
                     writeError(e);
-                 });
+                });
 
         });
 
-        $("#clearConfirmation").click(function(e){
+        $("#clearConfirmation").click(function() {
 
             $("#confirmationLog").empty();
 
         });
 
-        $("#clearErrors").click(function(e){
+        $("#clearErrors").click(function() {
 
             $("#errorLog").empty();
 
         });
 
 
-        function writeError(errorObj){
+        function writeError(errorObj) {
 
-            if($.isPlainObject(errorObj)){
+            if ($.isPlainObject(errorObj)) {
                 errorObj = errorObj.toString();
             }
 
@@ -196,9 +219,9 @@
 
         }
 
-        function writeActionLog(action, message){
+        function writeActionLog(action, message) {
 
-            if($.isPlainObject(message)){
+            if ($.isPlainObject(message)) {
                 message = message.toString();
             }
 
@@ -208,6 +231,9 @@
             $confirm.html(confirm);
 
         }
-        </script>
-    </body>
+
+    });
+    </script>
+</body>
+
 </html>

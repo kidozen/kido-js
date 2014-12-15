@@ -1,20 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <title>Kidozen Samples</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
-        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-        <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
-        <style>
-            #object {
-                height: 100px;
-            }
-        </style>
-    </head>
-    <body>
+<head>
+    <meta charset="utf-8" />
+    <title>Kidozen Samples</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+    <style>
+    #object {
+        height: 100px;
+    }
+    </style>
+</head>
+
+<body>
 
     <div id="storage" data-role="page">
 
@@ -59,8 +61,8 @@
                     <input type="text" id="param" name="param"></input>
                 </div>
 
-                <input class="btn" type="submit" value="send"/>
-                <input id="clearLogButton" type="button" value="clear log"/>
+                <input class="btn" type="submit" value="send" />
+                <input id="clearLogButton" type="button" value="clear log" />
             </form>
 
             <h3>log</h3>
@@ -73,53 +75,62 @@
     <script src="/js/kido.js"></script>
 
     <script type="text/javascript">
-        $(document).ready(function(){
-            var notifications = new Kido().notifications();
+    $(function() {
+        'use strict';
 
-            $("#clearLogButton").click(function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                $("#log").empty();
+        var application = 'app-name',
+            marketplace = 'my-company.kidocloud.com',
+            secretKey = 'your-app-secret-key',
+            kido = new Kido(application, marketplace, {
+                secretKey: secretKey
             });
 
-            $("#sendNotification").submit(function(e) {
-                e.preventDefault();
-                e.stopPropagation();
+        var notifications = kido.notifications();
 
-                var notif = {
-                    channel : $("#channel").val(),
-                    title   : $("#title").val(),
-                    type    : $("#type").val(),
-                    text    : $("#text").val(),
-                    badge   : $("#badge").val(),
-                    image   : $("#image").val(),
-                    param   : $("#param").val()
-                };
+        $("#clearLogButton").click(function(e) {
+            e.preventDefault();
+            e.stopPropagation();
 
-                try {
-                    var send = notifications.send(notif.channel, notif.title, notif.text, notif.type, notif.badge, notif.image, notif.param);
-                    send.done(function() {
-                        $("#channel").val("").focus();
-                    });
-                    send.fail(function(e) {
-                        var li = $("<li>" + currentTime() + " - error: " + JSON.stringify(e) + "</li>");
-                        $("#log").prepend(li);
-                    });
-                }
-                catch(err) {
+            $("#log").empty();
+        });
+
+        $("#sendNotification").submit(function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var notif = {
+                channel: $("#channel").val(),
+                title: $("#title").val(),
+                type: $("#type").val(),
+                text: $("#text").val(),
+                badge: $("#badge").val(),
+                image: $("#image").val(),
+                param: $("#param").val()
+            };
+
+            try {
+                var send = notifications.send(notif.channel, notif.title, notif.text, notif.type, notif.badge, notif.image, notif.param);
+                send.done(function() {
+                    $("#channel").val("").focus();
+                });
+                send.fail(function(e) {
                     var li = $("<li>" + currentTime() + " - error: " + JSON.stringify(e) + "</li>");
                     $("#log").prepend(li);
-                }
+                });
+            } catch (err) {
+                var li = $("<li>" + currentTime() + " - error: " + JSON.stringify(e) + "</li>");
+                $("#log").prepend(li);
+            }
 
-                return false;
-            });
+            return false;
         });
 
         function currentTime() {
             return new Date().getHours().toString() + ":" + new Date().getMinutes().toString() + ":" + new Date().getSeconds().toString();
-        };
+        }
 
+    });
     </script>
-    </body>
+</body>
+
 </html>

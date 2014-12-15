@@ -1,137 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <title>Kidozen Samples</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
-        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-        <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+<head>
+    <meta charset="utf-8" />
+    <title>Kidozen Samples</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    </head>
-    <body>
-        <div data-role="page">
-            <div data-role="header">
-                <h1>Kidozen - Config Samples</h1>
-                <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
-            </div>
+    <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
 
-            <div data-role="content">
+</head>
 
-                <div data-role="collapsible" data-theme="b" data-content-theme="c">
-                   <h3>Manipulate Config</h3>
-                   <div data-role="controlgroup" data-type="horizontal">
-                      <a data-role="button" class="get-value">Get Value</a>
-                      <a data-role="button" class="set-new-value">Set Value</a>
-                      <a data-role="button" class="delete-value">Delete Value</a>
-                   </div>
-                   <pre class="config-result">
+<body>
+    <div data-role="page">
+        <div data-role="header">
+            <h1>Kidozen - Config Samples</h1>
+            <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
+        </div>
+
+        <div data-role="content">
+
+            <div data-role="collapsible" data-theme="b" data-content-theme="c">
+                <h3>Manipulate Config</h3>
+                <div data-role="controlgroup" data-type="horizontal">
+                    <a data-role="button" class="get-value">Get Value</a>
+                    <a data-role="button" class="set-new-value">Set Value</a>
+                    <a data-role="button" class="delete-value">Delete Value</a>
+                </div>
+                <pre class="config-result">
                    </pre>
-                </div>
-
-                <div data-role="collapsible" data-theme="b" data-content-theme="c">
-                    <h3>Get All</h3>
-                    <button class="get-names">Get</button>
-                    <pre id="get-names-result"></pre>
-                </div>
-
-
-                <section id="logs" class="ui-body ui-body-b">
-                    <button type="button" id="clearConfirmation" class="btn">Clear Logs</button>
-                    <button type="button" id="clearErrors" class="btn">Clear Errors</button>
-                    <div class="ui-grid-a">
-                        <span class="ui-block-a">Logs</span>
-                        <span class="ui-block-b">Errors</span>
-                        <div id="confirmationLog" class="log-view ui-block-a"></div>
-                        <div id="errorLog" class="log-view ui-block-b"></div>
-                    </div>
-                </section>
             </div>
+
+            <div data-role="collapsible" data-theme="b" data-content-theme="c">
+                <h3>Get All</h3>
+                <button class="get-names">Get</button>
+                <pre id="get-names-result"></pre>
+            </div>
+
+
+            <section id="logs" class="ui-body ui-body-b">
+                <button type="button" id="clearConfirmation" class="btn">Clear Logs</button>
+                <button type="button" id="clearErrors" class="btn">Clear Errors</button>
+                <div class="ui-grid-a">
+                    <span class="ui-block-a">Logs</span>
+                    <span class="ui-block-b">Errors</span>
+                    <div id="confirmationLog" class="log-view ui-block-a"></div>
+                    <div id="errorLog" class="log-view ui-block-b"></div>
+                </div>
+            </section>
+        </div>
 
         <!-- KIDOZEN SDK -->
         <script src="/js/kido.js"></script>
 
         <script type="text/javascript">
+        $(function() {
+            'use strict';
 
-        var config = new Kido().config();
-
-        $(".set-new-value").click(function(e){
-
-            config
-                .set("test", {"foo": "bar"})
-                .done(function(ret){
-                    writeActionLog("set configuration value", ret);
-                })
-                .fail(function(e, x, Y){
-                    writeError(e);
+            var application = 'app-name',
+                marketplace = 'my-company.kidocloud.com',
+                secretKey = 'your-app-secret-key',
+                kido = new Kido(application, marketplace, {
+                    secretKey: secretKey
                 });
-        });
 
-        $(".get-value").click(function(e){
+            var config = kido.config();
 
-            config
-                .get("test")
-                .done(function(ret){
-                    writeActionLog("get configuration value", JSON.stringify(ret));
-                    $('#config-result').html(JSON.stringify(ret));
-                })
-                .fail(function(e, x, Y){
-                    writeError(e);
-                });
-        });
+            $(".set-new-value").click(function() {
 
-        $(".get-names").click(function(e){
+                config
+                    .set("test", {
+                        "foo": "bar"
+                    })
+                    .done(function(ret) {
+                        writeActionLog("set configuration value", ret);
+                    })
+                    .fail(function(e) {
+                        writeError(e);
+                    });
+            });
 
-            config
-                .getAll()
-                .done(function(ret){
-                    writeActionLog("configuration get all", ret);
-                    $('#get-names-result').html(JSON.stringify(ret));
-                })
-                .fail(function(e, x, Y){
-                    writeError(e);
-                });
-        });
+            $(".get-value").click(function() {
 
-        $(".delete-value").click(function(e){
+                config
+                    .get("test")
+                    .done(function(ret) {
+                        writeActionLog("get configuration value", JSON.stringify(ret));
+                        $('#config-result').html(JSON.stringify(ret));
+                    })
+                    .fail(function(e) {
+                        writeError(e);
+                    });
+            });
 
-            config
-                .del("test")
-                .done(function(ret){
-                    writeActionLog("delete configuration value", ret);
-                })
-                .fail(function(e, x, Y){
-                    writeError(e);
-                });
-        });
+            $(".get-names").click(function() {
 
-        function writeError(errorObj){
+                config
+                    .getAll()
+                    .done(function(ret) {
+                        writeActionLog("configuration get all", ret);
+                        $('#get-names-result').html(JSON.stringify(ret));
+                    })
+                    .fail(function(e) {
+                        writeError(e);
+                    });
+            });
 
-            if($.isPlainObject(errorObj)){
-                errorObj = errorObj.toString();
+            $(".delete-value").click(function() {
+
+                config
+                    .del("test")
+                    .done(function(ret) {
+                        writeActionLog("delete configuration value", ret);
+                    })
+                    .fail(function(e) {
+                        writeError(e);
+                    });
+            });
+
+            function writeError(errorObj) {
+
+                if ($.isPlainObject(errorObj)) {
+                    errorObj = errorObj.toString();
+                }
+
+                var $errorLog = $("#errorLog"),
+                    errorLog = "error :" + "<br/>" + errorObj + "<br/>" + $errorLog.html();
+
+                $errorLog.html(errorLog);
+
             }
 
-            var $errorLog = $("#errorLog"),
-                errorLog = "error :" + "<br/>" + errorObj + "<br/>" + $errorLog.html();
+            function writeActionLog(action, message) {
 
-            $errorLog.html(errorLog);
+                if ($.isPlainObject(message)) {
+                    message = message.toString();
+                }
 
-        }
+                var $confirm = $("#confirmationLog"),
+                    confirm = "action " + action + "<br/>" + message + "<br/>" + $confirm.html();
 
-        function writeActionLog(action, message){
+                $confirm.html(confirm);
 
-            if($.isPlainObject(message)){
-                message = message.toString();
             }
 
-            var $confirm = $("#confirmationLog"),
-                confirm = "action " + action + "<br/>" + message + "<br/>" + $confirm.html();
-
-            $confirm.html(confirm);
-
-        }
+        });
         </script>
 
-    </body>
+</body>
+
 </html>

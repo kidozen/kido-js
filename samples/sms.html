@@ -1,130 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <title>Kidozen Samples</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
-        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-        <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
-    </head>
-    <body>
+<head>
+    <meta charset="utf-8" />
+    <title>Kidozen Samples</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <div data-role="page">
+    <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+</head>
 
-            <div data-role="header">
-                <h1>Kidozen - Storage Samples</h1>
-                <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
+<body>
+
+    <div data-role="page">
+
+        <div data-role="header">
+            <h1>Kidozen - Storage Samples</h1>
+            <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
+        </div>
+
+        <div data-role="content">
+
+            <div data-role="fieldcontain">
+                <label for="toPhone">To Phone#:</label>
+                <input type="text" name="toPhone" id="toPhone" value="19192018509" placeholder="phone number" />
             </div>
 
-            <div data-role="content">
+            <div data-role="fieldcontain">
+                <label for="appName">Text Message:</label>
+                <input type="text" name="testMsg" id="testMsg" value="" placeholder="text message" />
+            </div>
 
-                <div data-role="fieldcontain">
-                  <label for="toPhone">To Phone#:</label>
-                  <input type="text" name="toPhone" id="toPhone" value="19192018509" placeholder="phone number"/>
+            <div data-role="collapsible" data-collapsed="false" data-theme="b" data-content-theme="c">
+                <h3>Send or Query</h3>
+
+                <div data-role="controlgroup" data-type="horizontal">
+                    <a data-role="button" class="send-msg">Send</a>
+                    <a data-role="button" class="query-status">Query Status</a>
                 </div>
-
-                <div data-role="fieldcontain">
-                  <label for="appName">Text Message:</label>
-                  <input type="text" name="testMsg" id="testMsg" value="" placeholder="text message"/>
-                </div>
-
-                <div data-role="collapsible" data-collapsed="false" data-theme="b" data-content-theme="c">
-                    <h3>Send or Query</h3>
-
-                    <div data-role="controlgroup" data-type="horizontal">
-                        <a data-role="button" class="send-msg">Send</a>
-                        <a data-role="button" class="query-status">Query Status</a>
-                    </div>
-
-                </div>
-
-
-                <section id="logs" class="ui-body ui-body-b">
-                    <button type="button" id="clearConfirmation" class="btn">Clear Logs</button>
-                    <button type="button" id="clearErrors" class="btn">Clear Errors</button>
-                    <div class="ui-grid-a">
-                        <span class="ui-block-a">Logs</span>
-                        <span class="ui-block-b">Errors</span>
-                        <div id="confirmationLog" class="log-view ui-block-a"></div>
-                        <div id="errorLog" class="log-view ui-block-b"></div>
-                    </div>
-                </section>
 
             </div>
+
+
+            <section id="logs" class="ui-body ui-body-b">
+                <button type="button" id="clearConfirmation" class="btn">Clear Logs</button>
+                <button type="button" id="clearErrors" class="btn">Clear Errors</button>
+                <div class="ui-grid-a">
+                    <span class="ui-block-a">Logs</span>
+                    <span class="ui-block-b">Errors</span>
+                    <div id="confirmationLog" class="log-view ui-block-a"></div>
+                    <div id="errorLog" class="log-view ui-block-b"></div>
+                </div>
+            </section>
 
         </div>
 
-        <!-- KIDOZEN SDK -->
-        <script src="/js/kido.js"></script>
+    </div>
 
-        <script type="text/javascript">
+    <!-- KIDOZEN SDK -->
+    <script src="/js/kido.js"></script>
 
-            var sms = new Kido().sms(),
-                id  = null;
+    <script type="text/javascript">
+    $(function() {
+        'use strict';
 
-            $(".send-msg").click(function(e){
+        var application = 'app-name',
+            marketplace = 'my-company.kidocloud.com',
+            secretKey = 'your-app-secret-key',
+            kido = new Kido(application, marketplace, {
+                secretKey: secretKey
+            });
 
-                var toPhone = $("#toPhone").val(),
-                    message = $("#testMsg").val();
+        var sms = kido.sms(),
+            id = null;
+
+        $(".send-msg").click(function() {
+
+            var toPhone = $("#toPhone").val(),
+                message = $("#testMsg").val();
+
+            sms
+                .send(toPhone, message)
+                .done(function(ret) {
+                    id = ret.messageId;
+                    writeActionLog("send new SMS Message", ret);
+                })
+                .fail(function(e) {
+                    writeError(e);
+                });
+        });
+
+        $(".query-status").click(function() {
+
+            if (!id || id === "") {
+
+                alert("Send and sms first.");
+
+            } else {
 
                 sms
-                    .send(toPhone, message)
-                    .done(function(ret){
-                        id = ret.messageId
-                        writeActionLog("send new SMS Message", ret);
+                    .getStatus(id)
+                    .done(function(ret) {
+                        writeActionLog("SMS Message Status", ret.status);
                     })
-                    .fail(function(e, x, Y){
+                    .fail(function(e) {
                         writeError(e);
                     });
-            });
+            }
+        });
 
-            $(".query-status").click(function(e){
+        function writeError(errorObj) {
 
-                if(!id || id === "") {
-
-                    alert("Send and sms first.");
-
-                }else{
-
-                    sms
-                        .getStatus(id)
-                        .done(function(ret){
-                            writeActionLog("SMS Message Status", ret.status);
-                        })
-                        .fail(function(e, x, Y){
-                            writeError(e);
-                        });
-                }
-            });
-
-            function writeError(errorObj){
-
-                if($.isPlainObject(errorObj)){
-                    errorObj = errorObj.toString();
-                }
-
-                var $errorLog = $("#errorLog"),
-                    errorLog = "error :" + "<br/>" + errorObj + "<br/>" + $errorLog.html();
-
-                $errorLog.html(errorLog);
-
-
+            if ($.isPlainObject(errorObj)) {
+                errorObj = errorObj.toString();
             }
 
-            function writeActionLog(action, message){
+            var $errorLog = $("#errorLog"),
+                errorLog = "error :" + "<br/>" + errorObj + "<br/>" + $errorLog.html();
 
-                if($.isPlainObject(message)){
-                    message = JSON.stringify(message);
-                }
+            $errorLog.html(errorLog);
 
-                var $confirm = $("#confirmationLog"),
-                    confirm = "action " + action + "<br/>" + message + "<br/>" + $confirm.html();
 
-                $confirm.html(confirm);
+        }
 
+        function writeActionLog(action, message) {
+
+            if ($.isPlainObject(message)) {
+                message = JSON.stringify(message);
             }
-        </script>
-    </body>
+
+            var $confirm = $("#confirmationLog"),
+                confirm = "action " + action + "<br/>" + message + "<br/>" + $confirm.html();
+
+            $confirm.html(confirm);
+
+        }
+
+    });
+    </script>
+</body>
+
 </html>
