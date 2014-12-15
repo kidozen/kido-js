@@ -1,4 +1,4 @@
-	<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="utf-8" />
@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <link rel="stylesheet" href="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
-		<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
         <script src="//code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
         <style>
             #object {
@@ -16,73 +16,76 @@
     </head>
     <body>
 
-	    <div id="storage" data-role="page">
+        <div id="storage" data-role="page">
 
-	        <div data-role="header">
-	            <h1>Kidozen - Storage Samples</h1>
-	            <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
-	        </div>
+            <div data-role="header">
+                <h1>Kidozen - Storage Samples</h1>
+                <a href="index.html" data-icon="arrow-l" data-ajax="false">back</a>
+            </div>
 
-	        <div data-role="content">
+            <div data-role="content">
 
-				<form id="sendMsg">
-		            <div data-role="fieldcontain">
-		              <label for="nickName">Nick name:</label>
-		              <input type="text" name="nickName" id="nickName" value="" placeholder="Put your nick name first!"/>
-		            </div>
-		            <div data-role="fieldcontain">
-						<label for="message">Message</label>
-						<input type="text" id="message" name="message">
-		            </div>
-					<input class="btn" type="submit" value="send"/>
-				</form>
+                <form id="sendMsg">
+                    <div data-role="fieldcontain">
+                      <label for="nickName">Nick name:</label>
+                      <input type="text" name="nickName" id="nickName" value="" placeholder="Put your nick name first!"/>
+                    </div>
+                    <div data-role="fieldcontain">
+                        <label for="message">Message</label>
+                        <input type="text" id="message" name="message">
+                    </div>
+                    <input class="btn" type="submit" value="send"/>
+                </form>
 
-				<h3>History</h3>
-				<ul id="history" data-role="listview">
-				</ul>
+                <h3>History</h3>
+                <ul id="history" data-role="listview">
+                </ul>
 
 
-	        </div>
-	    </div>
+            </div>
+        </div>
 
-	    <!-- KIDOZEN SDK -->
-	    <!-- pubsub needs socket.io -->
-	    <script src="/js/socket.io.min.js"></script>
-	    <script src="/js/kido.js"></script>
+        <!-- KIDOZEN SDK -->
+        <!-- pubsub needs socket.io -->
+        <script src="/js/socket.io.min.js"></script>
+        <script src="/js/kido.js"></script>
 
-		<script type="text/javascript">
-			var disposeChannel = null;
-			$( document ).delegate( "[data-role=page]", "pageinit", function() {
+        <script type="text/javascript">
+            var disposeChannel = null;
+            $(function () {
+                var application = 'app-name',
+                    marketplace = 'my-company.kidocloud.com',
+                    secretKey = 'your-app-secret-key',
+                    kido = new Kido(application, marketplace, { secretKey: secretKey });
 
-				var channel = new Kido("foobar")
-									.pubsub()
-									.channel("chat");
+                var channel = kido.pubsub().channel("chat");
 
-				disposeChannel = channel.subscribe(function(message){
-					$("#history")
-						.append($("<li>" + message.nickName + " said: <b>" + message.message + "</b></li>"))
+                disposeChannel = channel.subscribe(function (message) {
+                    $("#history")
+                        .append($("<li>" + message.nickName + " said: <b>" + message.message + "</b></li>"));
 
-					$("#history").listview("refresh").trigger("create");
-				});
+                    $("#history").listview("refresh").trigger("create");
+                });
 
-				//to disconnect from server use disposeChannel();
+                //to disconnect from server use disposeChannel();
 
-				$("#sendMsg").submit(function(e){
+                $("#sendMsg").submit(function (e) {
 
-					e.preventDefault();
-					e.stopPropagation();
+                    e.preventDefault();
+                    e.stopPropagation();
 
-					var msg = { message: $("#message").val(), nickName: $("#nickName").val() };
+                    var msg = { message: $("#message").val(), nickName: $("#nickName").val() };
 
-					channel
-						.publish(msg)
-						.done(function(){
-						 	$("#message").val("").focus();
-						 });
+                    channel
+                        .publish(msg)
+                        .done(function () {
+                            $("#message").val("").focus();
+                         });
 
-					return false;
-				});
-			});
-		</script>
-	</body>
+                    return false;
+                });
+
+            });
+        </script>
+    </body>
 </html>
