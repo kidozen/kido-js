@@ -1,14 +1,20 @@
-// KidoZen Javascript SDK v0.1.10.
+// KidoZen Javascript SDK v0.1.11.
 // Copyright (c) 2014 Kidozen, Inc. MIT Licensed
-var KIDO_SDK_VERSION = '0.1.10';
+var KIDO_SDK_VERSION = '0.1.11';
 /**
  * Kido - Kidozen representation of an Application.
  *
  * Use the Kido class to gain access to all the application's backend services.
  */
 
-// make sure JSON.parse and JSON.stringify exist.
+// make sure JSON.parse and JSON.stringify exist
 if (!JSON || !JSON.parse || !JSON.stringify) throw "KidoZen requires JSON.stringify. Try adding a polyfil lib like json2.js";
+
+// make sure jQuery exists and it's version 1.8+
+if (typeof $ === 'undefined') throw "jQuery 1.8 or above is required to use the Kido SDK.";
+if (typeof $.fn === 'undefined' || typeof $.fn.jquery === 'undefined') throw "Could not determine jQuery version.";
+var $version = $.fn.jquery.split('.');
+if (parseInt($version[0]) < 2 && parseInt($version[1]) < 8) throw "jQuery 1.8 or above is required to use the Kido SDK.";
 
 /**
  * Kido is the main class to manage Kidozen services.
@@ -22,16 +28,14 @@ var Kido = function (name, marketplace, options) {
 
     if (!(this instanceof Kido)) return new Kido();
 
-    if (typeof $ === 'undefined') throw "jQuery 1.8 or above is required to use the Kido SDK.";
-    if (typeof $.fn === 'undefined' || typeof $.fn.jquery === 'undefined') throw "Could not determine jQuery version.";
-    var $version = $.fn.jquery.split('.');
-    if (parseInt($version[0]) < 2 && parseInt($version[1]) < 8) throw "jQuery 1.8 or above is required to use the Kido SDK.";
-
     if (typeof marketplace !== 'undefined') {
         if (marketplace.indexOf('://') === -1) {
             marketplace = 'https://' + marketplace;
         } else if (marketplace.indexOf('http://') !== 0 && marketplace.indexOf('https://') !== 0) {
             throw "Marketplace url must begin with https://";
+        }
+        if (marketplace.substr(-1) === '/') {
+            marketplace = marketplace.substr(0, marketplace.length - 1);
         }
     }
 
